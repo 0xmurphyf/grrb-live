@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRRB Live — 全球实际资源篮子</title>
+<style>
+:root{
+  --bg:#071018;--panel:#0d1622;--elev:#141e2c;--ink:#e8eef6;--mute:#8b9bb0;--faint:#5d6e82;
+  --line:rgba(232,238,246,.12);--accent:#7eb0d4;--gain:#5dbe8a;--loss:#e07a84;--metal:#c9b896;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:auto;padding:28px 18px 72px}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:26px}
+.kicker{font-size:11px;letter-spacing:.22em;color:var(--accent);font-weight:600;text-transform:uppercase}
+.title{font-size:36px;font-weight:650;margin:8px 0 0;letter-spacing:-.03em;text-wrap:balance}
+.sub{color:var(--mute);max-width:720px;line-height:1.7;margin-top:12px}
+.live{border:1px solid var(--line);background:var(--elev);border-radius:999px;padding:8px 13px;color:var(--gain);font-size:12px;white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;background:var(--gain);border-radius:50%;margin-right:7px;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4;transform:scale(.85)}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+.note-box{border:1px solid var(--line);background:var(--elev);border-radius:16px;padding:16px 18px;margin:0 0 28px;line-height:1.7;color:var(--mute);font-size:14px}
+.note-box b{color:var(--ink);font-weight:600}
+.section{font-size:18px;font-weight:600;margin:8px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(93,190,138,.14);color:var(--gain)}
+.grid{display:grid;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.label{color:var(--mute);font-size:13px}
+.big{font-size:44px;font-weight:650;letter-spacing:-.03em;margin:8px 0;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.change{font-size:13px;color:var(--gain)}
+.change.down{color:var(--loss)}
+.meta{color:var(--faint);font-size:12px;margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mini{background:var(--elev);border:1px solid var(--line);border-radius:12px;padding:12px}
+.mini .k{color:var(--faint);font-size:11px;letter-spacing:.04em}
+.mini .p{font-size:20px;font-weight:600;margin-top:8px;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.mini .s{color:var(--faint);font-size:11px;margin-top:6px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+th{color:var(--faint);font-weight:500}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cat-h td{padding-top:16px;color:var(--accent);font-size:12px;letter-spacing:.08em;font-weight:600;border-bottom:none}
+.cat-energy{color:#e0a04a;background:rgba(224,160,74,.14)}
+.cat-bio{color:#5dbe8a;background:rgba(93,190,138,.14)}
+.cat-mfg{color:#7eb0d4;background:rgba(126,176,212,.14)}
+.cat-tech{color:#c9b896;background:rgba(201,184,150,.14)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{background:var(--elev);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer;min-height:44px;font:inherit}
+button.primary{background:var(--accent);color:#071018;border-color:transparent;font-weight:600}
+button:disabled{opacity:.55;cursor:default}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:12px;background:rgba(126,176,212,.12);color:var(--accent)}
+.formula{font-family:"IBM Plex Mono",ui-monospace,monospace;background:#07111d;padding:12px 14px;border-radius:8px;color:#a9d9ff;overflow:auto;margin-top:12px;font-size:12px}
+.fine{color:var(--faint);font-size:12px;line-height:1.7;margin-top:14px}
+.bars{display:grid;gap:12px;margin-top:16px}
+.bar-top{display:flex;justify-content:space-between;gap:12px;font-size:12px}
+.bar-top .n{color:var(--mute)}
+.bar-top .v{font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--faint)}
+.track{height:8px;background:var(--elev);border-radius:99px;overflow:hidden;margin-top:6px}
+.fill{height:100%;border-radius:99px}
+.diag{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px}
+.chip.on{color:var(--gain)} .chip.off{color:var(--loss)}
+.chip.warn{color:var(--metal)}
+.chip i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.proxy{color:var(--metal);font-size:11px}
+.stack{display:none}
+@media(max-width:900px){
+  .cards{grid-template-columns:1fr 1fr}
+  .title{font-size:28px}
+  .big{font-size:32px}
+  .top{display:block}
+  .live{display:inline-block;margin-top:14px}
+  .desk{display:none}
+  .stack{display:block}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .row .l{font-size:13px}
+  .row .sub{font-size:12px;color:var(--mute);margin:0}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="kicker">GRRB · Global Real Resource Basket</div>
+    <h1 class="title">全球实际资源篮子</h1>
+    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 × 万分之一</strong>（一分部不预设权重）。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物（含生产性使用，非仅耗散）。</p>
+  </div>
+  <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
+</header>
+
+<div class="note-box">
+  <b>篮子怎么读。</b>数量 = 全球实际年消耗量 ÷ 10000（万分之一），价格随市场变动。例如全球煤炭年耗约80亿吨，篮子固定取80万...（按合理合约单位调整）。<strong>权重不由设计者预设，而由"市场价格 × 实际消耗数量"自然涌现。</strong>贵金属仅保留工业用途（铂/钯/银），黄金归零（去投资/货币属性）。带 <span class="proxy">*proxy</span> 者无直接全球期货，用相关合约近似；<span class="proxy">*fixed</span> 者无可靠实时源，用近期固定参考价。
+</div>
+
+<div class="section">GRRB / USD <span class="tag" id="freshTag">8 小时缓存</span></div>
+<div class="grid">
+  <section class="card">
+    <div class="label">实物资源篮子的美元成本</div>
+    <div class="big" id="grrb">$—</div>
+    <div id="grrbChange" class="change">正在聚合行情</div>
+    <div class="meta" id="grrbMeta"></div>
+    <canvas id="chart" width="1000" height="220" style="width:100%;height:220px;background:#091522;border-radius:10px;margin-top:16px"></canvas>
+  </section>
+
+  <section class="card">
+    <div class="label">类别构成（按当前美元价值，自然涌现）</div>
+    <div class="bars" id="catBars"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">关键市场价格</div>
+    <div class="cards" id="tickers"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">完整实物篮子 · 25 项</div>
+    <div class="desk">
+      <table>
+        <thead><tr><th>代表资源</th><th>固定数量</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
+        <tbody id="basketBody"></tbody>
+      </table>
+    </div>
+    <div class="stack" id="basketStack"></div>
+    <div class="formula">GRRB(t) = Σ [ (全球年消耗量 ÷ 10000) × 当前 USD 价格 ÷ 报价单位 ]</div>
+  </section>
+
+  <section class="card">
+    <div class="label">数据与刷新</div>
+    <div class="controls" style="margin-top:12px">
+      <span class="pill">8 小时自动</span>
+      <button class="primary" id="btnNow" type="button">立即更新</button>
+    </div>
+    <div class="meta" id="nextMeta" style="margin-top:10px"></div>
+    <div class="diag" id="diag" style="margin-top:14px"></div>
+    <p class="fine">
+      <b>数据源（多层 fallback，单源失败不影响其余项）：</b><br>
+      · 贵金属：api.gold-api.com（无需 key，CORS 友好）→ Yahoo query2 v10 兜底。<br>
+      · 期货/能源/农产品/金属：Yahoo Finance。优先 <code>query2.finance.yahoo.com/v10/finance/quoteSummary</code>（较宽松），失败则尝试 v8 chart 直连，再失败则经 AllOrigins / Corsproxy.io CORS 代理。<br>
+      · <span class="proxy">*proxy</span> 品种（水泥、砂石）无标准全球期货，复用相关合约或近期固定参考价，不代表真实可交易价格。<br>
+      · 美农期货（玉米/小麦/稻米/大豆/糖/棉/咖啡/可可）Yahoo 以美分报价，已 ÷100。<br>
+      · 任何品种取数失败 → 显示 DATA INCOMPLETE，指数照常计算其余项。默认 8 小时刷新一次。
+    </p>
+  </section>
+</div>
+</div>
+
+<script>
+const TTL = 8 * 60 * 60 * 1000;
+const LS_SNAP = "grrb.snap.v3";
+const LS_HIST = "grrb.hist.v3";
+
+// === 行情代理(Cloudflare Worker,绕开 Yahoo 对浏览器/云 IP 的 429 限流)===
+// 部署: wrangler deploy (worker.mjs)。端点: /yahoo/<SYMBOL>
+const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
+
+// =====================================================================
+// BASKET: 数量 = 全球实际年消耗量 ÷ 10000（万分之一），不分预设权重
+// cents=true   => Yahoo 以美分(cent)报价，需 /100
+// metal="XAG"  => 走 Gold-API 贵金属源
+// proxy=true   => 无直接全球期货，复用相关合约（仅近似）
+// fixed={price, source} => 无可靠实时源，用近期固定参考价（标注 *fixed）
+// =====================================================================
+const BASKET = [
+  // ---- 动力与能源（年耗约数百亿吨）----
+  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:800000, unit:"t",     cents:false, yahoo:"MTF=F"},   // 全球~80亿t/年
+  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:40000,  unit:"bbl",   cents:false, yahoo:"CL=F"},    // 全球~40亿bbl/年(折算)
+  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:30000,  unit:"bbl",   cents:false, yahoo:"BZ=F"},
+  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:400000, unit:"MMBtu", cents:false, yahoo:"NG=F"},    // 全球~4万亿m³
+  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:5000,   unit:"gal",   cents:false, yahoo:"HO=F"},
+  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:5000,   unit:"gal",   cents:false, yahoo:"RB=F"},
+  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:60,     unit:"lb",    cents:false, yahoo:"UX=F"},
+
+  // ---- 生存与生物质（年耗数十亿吨）----
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:120000, unit:"bu", cents:true, yahoo:"ZC=F"},   // 全球~12亿t
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:78000,  unit:"bu", cents:true, yahoo:"ZW=F"},   // 全球~7.8亿t
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:52000,  unit:"bu", cents:true, yahoo:"ZR=F"},   // 全球~5.2亿t
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:37000,  unit:"bu", cents:true, yahoo:"ZS=F"},   // 全球~3.7亿t
+  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:180000, unit:"lb", cents:true, yahoo:"SB=F"},
+  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:25000,  unit:"lb", cents:true, yahoo:"CT=F"},
+  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:10000,  unit:"lb", cents:true, yahoo:"KC=F"},
+  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:5000,   unit:"lb", cents:true, yahoo:"CC=F"},
+
+  // ---- 结构与制造 ----
+  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:250000, unit:"dmt", cents:false, yahoo:"TIO=F"},  // 全球~25亿t
+  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:190000, unit:"t",    cents:false, yahoo:"HRC=F"},  // 全球~19亿t粗钢
+  // 金属期货报价单位约定：HG(铜)=USD/lb；ALI(铝)/ZNC(锌)/NI(镍)/HRC(热卷)/TIO(铁矿)=USD/公吨。
+  // qty 一律写成"合约报价单位"，使 lineVal = price × qty 无需额外换算。
+  //   全球年耗(t) → 万分之一(t) → 按报价单位换算：
+  //   报价单位为 lb 的金属: t × 2204.62 = lb
+  //   报价单位为 t  的金属: 直接用万分之一的 t 数
+  {key:"alum",   cat:"结构与制造", name:"铝",           qty:6800,    unit:"t",    cents:false, yahoo:"ALI=F"},  // 全球~6800万t, 万分之一=6800t, ALI按吨
+  {key:"copper", cat:"结构与制造", name:"铜",           qty:5511550, unit:"lb",   cents:false, yahoo:"HG=F"},   // 全球~2500万t, /1e4=2500t ×2204.62=5,511,550lb, HG按磅
+  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:1300,    unit:"t",    cents:false, yahoo:"ZNC=F"},  // 全球~1300万t, /1e4=1300t, ZNC按吨
+  {key:"nickel", cat:"结构与制造", name:"镍",           qty:300,     unit:"t",    cents:false, yahoo:"MNI=F"},  // 全球~300万t, /1e4=300t, MNI(LME)按吨
+  {key:"cement", cat:"结构与制造", name:"水泥",         qty:400000,  unit:"t",    cents:false, yahoo:"TIO=F", proxy:true}, // 全球~40亿t, /1e4=40万t, 复用铁矿合约近似
+
+  // ---- 技术催化（仅工业用途，黄金归零）----
+  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:130, unit:"oz", cents:false, metal:"XAG"},  // 全球~1.3万吨(工业)
+  {key:"pall",   cat:"技术催化", name:"钯",         qty:13,  unit:"oz", cents:false, metal:"XPD"},   // 全球~300t(工业部分)
+  {key:"plat",   cat:"技术催化", name:"铂",         qty:9,   unit:"oz", cents:false, metal:"XPT"},   // 全球~200t(工业部分)
+  // 黄金：归零，不列入（投资/货币属性，非维持运作的实际消耗）
+];
+
+const TICKERS = [
+  {key:"coal",   label:"煤炭 / t"},
+  {key:"wti",    label:"WTI / bbl"},
+  {key:"corn",   label:"玉米 / bu"},
+  {key:"copper", label:"铜 / t"},
+  {key:"iron",   label:"铁矿石 / dmt"},
+  {key:"brent",  label:"布伦特 / bbl"},
+  {key:"ng",     label:"天然气 / MMBtu"},
+  {key:"silver", label:"白银 / oz"},
+];
+
+const CAT_ORDER = ["动力与能源","生存与生物质","结构与制造","技术催化"];
+const CAT_COLOR = {
+  "动力与能源":"#e0a04a",
+  "生存与生物质":"#5dbe8a",
+  "结构与制造":"#7eb0d4",
+  "技术催化":"#c9b896",
+};
+
+const quotes = {};
+const sources = {};
+let history = [];
+try { history = JSON.parse(localStorage.getItem(LS_HIST) || "[]"); } catch { history = []; }
+
+// ---------- 工具 ----------
+function money(x,d=2){
+  if(x==null || !Number.isFinite(x)) return "—";
+  return "$"+x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function pct(x){
+  if(x==null || !Number.isFinite(x)) return "";
+  return (x>=0?"+":"")+x.toFixed(2)+"%";
+}
+function hk(ts){
+  return new Date(ts).toLocaleString("zh-CN",{timeZone:"Asia/Hong_Kong",hour12:false});
+}
+function lineVal(item, px){
+  if(px==null || !Number.isFinite(px)) return null;
+  return px * item.qty; // qty 已按合约单位，cents 在取价时处理
+}
+async function fetchJson(url, timeout=14000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), timeout);
+  try{
+    const r = await fetch(url, {cache:"no-store", signal:ctrl.signal});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+// ---------- 贵金属源：Gold-API ----------
+async function fetchMetal(sym){
+  // api.gold-api.com 无需 key，返回 { price, ... }（USD/oz）
+  const j = await fetchJson("https://api.gold-api.com/price/"+sym);
+  if(!j || !Number.isFinite(Number(j.price))) throw new Error("gold-api no price");
+  return {price: Number(j.price), source:"Gold-API "+sym};
+}
+
+// ---------- 期货源：经 Cloudflare Worker 代理抓 Yahoo v8 chart ----------
+// Worker 出口在服务端,绕开 Yahoo 对浏览器/云 IP 的 429;CORS 头由 Worker 加好。
+async function yahooProxyFetch(symbol, cents){
+  const url = PROXY_BASE + "/yahoo/" + encodeURIComponent(symbol);
+  const j = await fetchJson(url);
+  const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+  if(!m) throw new Error("proxy no meta");
+  let p = Number(m.regularMarketPrice);
+  if(cents || m.currency==="USX") p = p/100;
+  if(!Number.isFinite(p)) throw new Error("proxy no price");
+  return {price:p, source:"Worker/"+symbol};
+}
+
+// 对某一项取价：贵金属走 Gold-API，期货走 fallback 链
+async function fetchItem(item){
+  if(item.metal){
+    try{ return await fetchMetal(item.metal); }catch(e){}
+    // 贵金属 fallback：Yahoo v10
+    try{ const r = await yahooV10(item.metal+"=F", false); return r; }catch(e){}
+    return null;
+  }
+  if(item.fixed){ return {price:item.fixed.price, source:item.fixed.source, fixed:true}; }
+  const cents = item.cents;
+  const sym = item.yahoo;
+  try{ return await yahooProxyFetch(sym, cents); }catch(e){}
+  return null;
+}
+
+async function loadAll(){
+  document.getElementById("status").textContent = "拉取中";
+  const jobs = BASKET.map(async item=>{
+    const hit = await fetchItem(item);
+    if(hit && hit.price!=null && Number.isFinite(hit.price)){
+      quotes[item.key] = {price:hit.price, fixed:!!hit.fixed};
+      sources[item.key] = hit.source;
+    } else {
+      quotes[item.key] = {price:null, fixed:false};
+      sources[item.key] = null;
+    }
+  });
+  await Promise.all(jobs);
+  try{ localStorage.setItem(LS_SNAP, JSON.stringify({at:Date.now(), quotes, sources})); }catch{}
+  render(false);
+}
+
+function compute(){
+  let total=0, ok=0, missing=[];
+  const rows=[];
+  const cats={};
+  for(const name of CAT_ORDER) cats[name]=0;
+  for(const item of BASKET){
+    const q = quotes[item.key] || {};
+    const v = lineVal(item, q.price);
+    if(v==null) missing.push(item.name);
+    else { total+=v; ok++; cats[item.cat]+=v; }
+    rows.push({item, q, v});
+  }
+  return {total, complete: missing.length===0, missing, rows, cats, ok};
+}
+
+function render(){
+  const g = compute();
+  const el = document.getElementById("grrb");
+  el.textContent = g.complete ? money(g.total,0) : money(g.total,0)+"*";
+  const chEl = document.getElementById("grrbChange");
+  if(g.complete){
+    chEl.textContent = "全部 "+BASKET.length+" 项实物组件已到位";
+    chEl.className = "change";
+  } else {
+    chEl.textContent = "缺少 "+g.missing.length+" 项："+g.missing.join("、");
+    chEl.className = "change down";
+  }
+  // 历史快照
+  if(history.length){
+    const prev = history[history.length-1];
+    if(prev && prev.v && g.total){
+      const d = (g.total-prev.v)/prev.v*100;
+      chEl.textContent += "  ·  "+pct(d)+" 相对上次快照";
+      chEl.className = "change"+(d<0?" down":"");
+    }
+  }
+  const last = history[history.length-1];
+  if(g.total && (!last || Math.abs(last.v-g.total)>0.5)){
+    history.push({t:Date.now(), v:g.total});
+    if(history.length>80) history.shift();
+    try{ localStorage.setItem(LS_HIST, JSON.stringify(history)); }catch{}
+  }
+  drawChart();
+
+  // 类别条形图（自然涌现的权重）
+  const maxCat = Math.max(1, ...Object.values(g.cats));
+  document.getElementById("catBars").innerHTML = CAT_ORDER.map(name=>{
+    const v = g.cats[name]||0;
+    const share = g.total ? v/g.total*100 : 0;
+    return `<div>
+      <div class="bar-top"><span class="n">${name}</span><span class="v">${money(v,0)} · ${share.toFixed(1)}%</span></div>
+      <div class="track"><div class="fill" style="width:${(v/maxCat)*100}%;background:${CAT_COLOR[name]}"></div></div>
+    </div>`;
+  }).join("");
+
+  // 关键价格卡
+  document.getElementById("tickers").innerHTML = TICKERS.map(t=>{
+    const q = quotes[t.key]||{};
+    return `<div class="mini"><div class="k">${t.label}</div><div class="p">${money(q.price, q.price && q.price<2?4:2)||"—"}</div><div class="s">${sources[t.key]||"—"}</div></div>`;
+  }).join("");
+
+  // 完整篮子表
+  let lastCat="", body="";
+  for(const row of g.rows){
+    if(row.item.cat!==lastCat){
+      body += `<tr class="cat-h"><td colspan="5" class="${catClass(row.item.cat)}">${row.item.cat}</td></tr>`;
+      lastCat = row.item.cat;
+    }
+    const share = g.total && row.v!=null ? (row.v/g.total*100).toFixed(1)+"%" : "—";
+    const proxyNote = row.item.proxy ? ` <span class="proxy">*proxy</span>` : "";
+    body += `<tr>
+      <td>${row.item.name}${proxyNote}</td>
+      <td>${row.item.qty.toLocaleString()} ${row.item.unit}</td>
+      <td class="num">${row.q.price==null?"—":money(row.q.price, row.q.price<2?4:2)}</td>
+      <td class="num">${row.v==null?"—":money(row.v,0)}</td>
+      <td class="num">${share}</td>
+    </tr>`;
+  }
+  document.getElementById("basketBody").innerHTML = body;
+
+  // 移动端栈
+  lastCat=""; let stack="";
+  for(const row of g.rows){
+    if(row.item.cat!==lastCat){
+      stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${row.item.cat}</div>`;
+      lastCat = row.item.cat;
+    }
+    stack += `<div class="row"><div class="l">${row.item.name}${row.item.proxy?' <span class="proxy">*proxy</span>':''}<div class="sub">${row.item.qty.toLocaleString()} ${row.item.unit}</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+  }
+  document.getElementById("basketStack").innerHTML = stack;
+
+  // 诊断芯片
+  document.getElementById("diag").innerHTML = BASKET.map(item=>{
+    const ok = quotes[item.key] && quotes[item.key].price!=null;
+    const cls = item.proxy ? "warn" : (ok?"on":"off");
+    return `<span class="chip ${cls}"><i></i>${item.name}${sources[item.key]?" · "+(sources[item.key].split(" ")[0]):""}</span>`;
+  }).join("");
+
+  document.getElementById("grrbMeta").textContent = hk(Date.now());
+  document.getElementById("freshTag").textContent = "刚刚更新";
+  const remain = TTL - (Date.now() % TTL);
+  document.getElementById("nextMeta").textContent = "下次自动 "+Math.floor(remain/3600000)+" 小时 "+Math.floor((remain%3600000)/60000)+" 分后";
+  document.getElementById("status").textContent = "LIVE · "+new Date().toLocaleTimeString("zh-CN");
+}
+
+function catClass(name){
+  return "cat-"+ ({"动力与能源":"energy","生存与生物质":"bio","结构与制造":"mfg","技术催化":"tech"})[name];
+}
+
+function drawChart(){
+  const c=document.getElementById("chart"), ctx=c.getContext("2d"), w=c.width, h=c.height;
+  ctx.clearRect(0,0,w,h);
+  if(history.length<2){
+    ctx.fillStyle="#5d6e82"; ctx.font="13px sans-serif";
+    ctx.fillText("快照点不足，强制刷新数次后形成走势", 20, h/2);
+    return;
+  }
+  const vals=history.map(p=>p.v);
+  const min=Math.min(...vals), max=Math.max(...vals), range=max-min||1;
+  ctx.strokeStyle="#7eb0d4"; ctx.lineWidth=2.5; ctx.beginPath();
+  history.forEach((p,i)=>{
+    const x=i*(w-36)/(history.length-1)+18;
+    const y=h-28-(p.v-min)/range*(h-50);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle="#5d6e82"; ctx.font="12px sans-serif";
+  ctx.fillText("GRRB / USD", 18, 18);
+}
+
+async function refresh(force){
+  const btn=document.getElementById("btnNow");
+  btn.disabled=true;
+  try{
+    if(!force){
+      try{
+        const raw=localStorage.getItem(LS_SNAP);
+        if(raw){
+          const snap=JSON.parse(raw);
+          if(snap.at && Date.now()-snap.at < TTL){
+            Object.assign(quotes, snap.quotes||{});
+            Object.assign(sources, snap.sources||{});
+            render();
+            document.getElementById("freshTag").textContent="8 小时缓存";
+            document.getElementById("status").textContent="CACHED";
+            return;
+          }
+        }
+      }catch{}
+    }
+    await loadAll();
+  } finally {
+    btn.disabled=false;
+  }
+}
+
+document.getElementById("btnNow").onclick = ()=>refresh(true);
+refresh(false);
+setInterval(()=>refresh(false), TTL);
+</script>
+</body>
+</html>
