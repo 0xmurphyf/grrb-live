@@ -185,10 +185,10 @@ const BASKET = [
   {key:"nickel", cat:"结构与制造", name:"镍",           unit:"t",    cents:false, yahoo:"MNI=F", annual:3.5e6,  src:"USGS 2024"},
   {key:"cement", cat:"结构与制造", name:"水泥",         unit:"t",    cents:false, yahoo:"TIO=F", annual:4.1e9,  src:"USGS 2024"},
 
-  {key:"silver", cat:"技术催化", name:"工业白银", unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
-  {key:"pall",   cat:"技术催化", name:"钯",         unit:"oz", cents:false, metal:"XPD", annual:1.0e7,  src:"Johnson Matthey 2024"},
-  {key:"plat",   cat:"技术催化", name:"铂",         unit:"oz", cents:false, metal:"XPT", annual:7.0e6,  src:"Johnson Matthey 2024"},
   {key:"gold",   cat:"技术催化", name:"工业黄金",   unit:"oz", cents:false, metal:"XAU", annual:1.0e7,  src:"Metals Focus 2024"},
+  {key:"silver", cat:"技术催化", name:"工业白银", unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
+  {key:"plat",   cat:"技术催化", name:"铂",         unit:"oz", cents:false, metal:"XPT", annual:7.0e6,  src:"Johnson Matthey 2024"},
+  {key:"pall",   cat:"技术催化", name:"钯",         unit:"oz", cents:false, metal:"XPD", annual:1.0e7,  src:"Johnson Matthey 2024"},
 ];
 // 人均数量 = 年耗 / 人口（POP 运行时取实时，兜底 POP_FALLBACK）
 function qtyOf(item){ return item.annual / (POP_LIVE || POP_FALLBACK); }
