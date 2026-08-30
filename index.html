@@ -129,7 +129,7 @@ button:disabled{opacity:.55;cursor:default}
   </section>
 
   <section class="card">
-    <div class="label">完整实物篮子 · 25 项</div>
+    <div class="label">完整实物篮子 · 26 项</div>
     <div class="desk">
       <table>
         <thead><tr><th>代表资源</th><th>人均数量</th><th>年耗</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
@@ -185,6 +185,7 @@ const BASKET = [
   {key:"silver", cat:"技术催化", name:"工业白银", unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
   {key:"pall",   cat:"技术催化", name:"钯",         unit:"oz", cents:false, metal:"XPD", annual:1.0e7,  src:"Johnson Matthey 2024"},
   {key:"plat",   cat:"技术催化", name:"铂",         unit:"oz", cents:false, metal:"XPT", annual:7.0e6,  src:"Johnson Matthey 2024"},
+  {key:"gold",   cat:"技术催化", name:"工业黄金",   unit:"oz", cents:false, metal:"XAU", annual:1.0e7,  src:"Metals Focus 2024"},
 ];
 // 人均数量 = 年耗 / 人口（POP 运行时取实时，兜底 POP_FALLBACK）
 function qtyOf(item){ return item.annual / (POP_LIVE || POP_FALLBACK); }
