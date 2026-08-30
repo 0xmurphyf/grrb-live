@@ -61,6 +61,11 @@ button:disabled{opacity:.55;cursor:default}
 .chip.on{color:var(--gain)} .chip.off{color:var(--loss)}
 .chip.warn{color:var(--metal)}
 .chip i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.led{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:middle;flex:0 0 auto}
+.led.ok{background:var(--gain);box-shadow:0 0 6px rgba(93,190,138,.6)}
+.led.fail{background:var(--loss);box-shadow:0 0 6px rgba(224,122,132,.6)}
+.led.warn{background:var(--metal);box-shadow:0 0 6px rgba(201,184,150,.6)}
+.row .l{display:flex;align-items:flex-start}
 .stack{display:none}
 @media(max-width:900px){
   .cards{grid-template-columns:1fr 1fr}
@@ -86,7 +91,10 @@ button:disabled{opacity:.55;cursor:default}
     <h1 class="title">全球实际资源篮子</h1>
     <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
-  <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+    <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
+    <button class="primary" id="btnNow" type="button">立即更新</button>
+  </div>
 </header>
 
 <div class="grid">
@@ -125,22 +133,6 @@ button:disabled{opacity:.55;cursor:default}
       </table>
     </div>
     <div class="stack" id="basketStack"></div>
-  </section>
-
-  <section class="card">
-    <div class="label">数据与刷新</div>
-    <div class="controls" style="margin-top:12px">
-      <span class="pill">8 小时自动</span>
-      <button class="primary" id="btnNow" type="button">立即更新</button>
-    </div>
-    <div class="meta" id="nextMeta" style="margin-top:10px"></div>
-    <div class="meta" style="margin-top:6px">数据来源：
-      <a href="https://www.worldometers.info/world-population/" target="_blank" rel="noopener">Worldometer 人口</a> ·
-      <a href="https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.CD" target="_blank" rel="noopener">World Bank GDP</a> ·
-      <a href="https://www.macrotrends.net/commodities" target="_blank" rel="noopener">Yahoo Finance 行情</a> ·
-      <a href="https://www.usgs.gov/" target="_blank" rel="noopener">USGS/IEA/BP 年耗</a>
-    </div>
-    <div class="diag" id="diag" style="margin-top:14px"></div>
   </section>
 </div>
 </div>
@@ -440,11 +432,12 @@ function render(){
     }
     const share = g.total && row.v!=null ? (row.v/g.total*100).toFixed(1)+"%" : "—";
     const proxyNote = row.item.proxy ? ` <span class="proxy">*proxy</span>` : "";
+    const ledCls = row.item.proxy ? "led warn" : (row.q.price!=null ? "led ok" : "led fail");
     const nameLink = row.item.yahoo
       ? `<a href="https://finance.yahoo.com/quote/${row.item.yahoo}" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--faint)">${row.item.name}</a>`
       : row.item.name;
     body += `<tr>
-      <td>${nameLink}${proxyNote}</td>
+      <td><span class="${ledCls}"></span>${nameLink}${proxyNote}</td>
       <td>${(()=>{const c=convQty(row.item.unit, qtyOf(row.item)); return c.v.toLocaleString(undefined,{maximumFractionDigits:4})+" "+c.u;})()}</td>
       <td>${(()=>{const c=convQty(row.item.unit, row.item.annual); return c.v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+c.u;})()}<br><span class="meta">${srcLink(row.item.src)}</span></td>
       <td class="num">${row.q.price==null?"—":money(convPrice(row.item.unit,row.q.price).v, row.q.price<2?4:2)}/${convPrice(row.item.unit,row.q.price).u}</td>
@@ -464,20 +457,12 @@ function render(){
     const cq = convQty(row.item.unit, qtyOf(row.item));
     const ca = convQty(row.item.unit, row.item.annual);
     const cp = convPrice(row.item.unit, row.q.price);
-    stack += `<div class="row"><div class="l">${row.item.name}<div class="sub">人均 ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · 年耗 ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${ca.u} (${row.item.src})</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    const ledCls = row.item.proxy ? "led warn" : (row.q.price!=null ? "led ok" : "led fail");
+    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${row.item.name}<div class="sub">人均 ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · 年耗 ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${ca.u} (${row.item.src})</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
-  // 诊断芯片
-  document.getElementById("diag").innerHTML = BASKET.map(item=>{
-    const ok = quotes[item.key] && quotes[item.key].price!=null;
-    const cls = item.proxy ? "warn" : (ok?"on":"off");
-    return `<span class="chip ${cls}"><i></i>${item.name}${sources[item.key]?" · "+(sources[item.key].split(" ")[0]):""}</span>`;
-  }).join("");
-
   document.getElementById("freshTag").textContent = "刚刚更新";
-  const remain = TTL - (Date.now() % TTL);
-  document.getElementById("nextMeta").textContent = "下次自动 "+Math.floor(remain/3600000)+" 小时 "+Math.floor((remain%3600000)/60000)+" 分后";
   document.getElementById("status").textContent = "LIVE · "+new Date().toLocaleTimeString("zh-CN");
 }
 
