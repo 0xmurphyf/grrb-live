@@ -306,15 +306,17 @@ function compute(){
   return {total, pop: POP_LIVE || POP_FALLBACK, globalTotal: total*(POP_LIVE||POP_FALLBACK), complete: missing.length===0, missing, rows, cats, ok};
 }
 
-// ---------- 实时全球人口 / 权威 GDP（经 CF Worker 代理）----------
+// ---------- 实时全球人口（经 CF Worker 代理）/ 权威 GDP（World Bank 直连，自带 CORS）----------
 async function fetchPopGdp(){
   try{
     const j = await fetchJson(PROXY_BASE+"/pop");
     if(j && j.pop){ POP_LIVE = j.pop; window.__popMeta = j.source; }
   }catch(e){ window.__popMeta = "实时获取失败,用兜底 83 亿"; }
   try{
-    const j = await fetchJson(PROXY_BASE+"/gdp");
-    if(j && j.gdp){ window.__gdp = j.gdp; window.__gdpMeta = j.source; }
+    const j = await fetchJson("https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1");
+    const rec = j && j[1] && j[1][0];
+    if(rec && rec.value){ window.__gdp = rec.value; window.__gdpMeta = "World Bank "+rec.date; }
+    else throw new Error("no gdp");
   }catch(e){ window.__gdpMeta = "获取失败"; }
 }
 
