@@ -70,15 +70,24 @@ button:disabled{opacity:.55;cursor:default}
 .stack{display:none}
 @media(max-width:900px){
   .cards{grid-template-columns:1fr 1fr}
-  .title{font-size:28px}
-  .big{font-size:32px}
-  .top{display:block}
-  .live{display:inline-block;margin-top:14px}
+  .title{font-size:26px;margin-top:4px}
+  .big{font-size:30px}
+  .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
+  .top>div:first-child{min-width:0}
+  .top>div:last-child{flex-shrink:0;align-items:flex-start}
+  .live{display:inline-block;margin-top:0}
   .desk{display:none}
   .stack{display:block}
   .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
   .row .l{font-size:13px}
   .row .sub{font-size:12px;color:var(--mute);margin:0}
+}
+@media(max-width:480px){
+  .wrap{padding:18px 12px 56px}
+  .cards{grid-template-columns:1fr}
+  .card{padding:16px}
+  .title{font-size:22px}
+  .big{font-size:26px}
 }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -165,7 +174,7 @@ const I18N = {
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
     updated:"Updated", proxy:"approx" }
 };
-let LANG = localStorage.getItem("grrb.lang.v1") || "zh";
+let LANG = localStorage.getItem("grrb.lang.v1") || "en";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
 const CAT_EN = {"动力与能源":"Energy","生存与生物质":"Biomass","结构与制造":"Manufacturing","技术催化":"Catalysts"};
 function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
