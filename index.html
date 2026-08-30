@@ -84,17 +84,19 @@ button:disabled{opacity:.55;cursor:default}
   <div>
     <div class="kicker">GRRB · Global Real Resource Basket</div>
     <h1 class="title">全球实际资源篮子</h1>
-    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 ÷ 亿分之一</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
+    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 ÷ 全球人口（人均）</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
   <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
 </header>
 
 <div class="grid">
   <section class="card">
-    <div class="label">实物资源篮子的美元成本</div>
+    <div class="label">当前全球总消耗</div>
     <div class="big" id="grrb">$—</div>
     <div id="grrbChange" class="change">正在聚合行情</div>
     <div class="meta" id="grrbMeta"></div>
+    <div class="label" style="margin-top:18px">当前全球总人口</div>
+    <div class="big" id="pop" style="font-size:32px">—</div>
     <canvas id="chart" width="1000" height="220" style="width:100%;height:220px;background:#091522;border-radius:10px;margin-top:16px"></canvas>
   </section>
 
@@ -137,40 +139,43 @@ const LS_SNAP = "grrb.snap.v3";
 const LS_HIST = "grrb.hist.v3";
 
 // =====================================================================
-// BASKET: 数量 = 全球实际年消耗量 ÷ 100000000（亿分之一），不分预设权重
+// BASKET: 数量 = 全球实际年消耗量 ÷ 全球人口（人均），不分预设权重
 // cents=true   => Yahoo 以美分(cent)报价，需 /100
 // metal="XAG"  => 走 Gold-API 贵金属源
 // =====================================================================
 const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
+const POP = 8100000000; // 当前全球总人口（约 81 亿）
+const PPF = 100000000;  // 原篮子分母为亿分之一；人均 = 年耗 / POP
+const QSCALE = PPF / POP; // 旧 qty(÷1e8) → 人均(÷POP) 的缩放
 const BASKET = [
-  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:80,     unit:"t",     cents:false, yahoo:"MTF=F"},
-  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:4,      unit:"bbl",   cents:false, yahoo:"CL=F"},
-  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:3,      unit:"bbl",   cents:false, yahoo:"BZ=F"},
-  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:40,     unit:"MMBtu", cents:false, yahoo:"NG=F"},
-  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:0.5,    unit:"gal",   cents:false, yahoo:"HO=F"},
-  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:0.5,    unit:"gal",   cents:false, yahoo:"RB=F"},
-  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:0.006,  unit:"lb",    cents:false, yahoo:"UX=F"},
+  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:80*QSCALE,     unit:"t",     cents:false, yahoo:"MTF=F"},
+  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:4*QSCALE,      unit:"bbl",   cents:false, yahoo:"CL=F"},
+  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:3*QSCALE,      unit:"bbl",   cents:false, yahoo:"BZ=F"},
+  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:40*QSCALE,     unit:"MMBtu", cents:false, yahoo:"NG=F"},
+  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:0.5*QSCALE,    unit:"gal",   cents:false, yahoo:"HO=F"},
+  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:0.5*QSCALE,    unit:"gal",   cents:false, yahoo:"RB=F"},
+  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:0.006*QSCALE,  unit:"lb",    cents:false, yahoo:"UX=F"},
 
-  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:12,    unit:"bu", cents:true, yahoo:"ZC=F"},
-  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:7.8,   unit:"bu", cents:true, yahoo:"ZW=F"},
-  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:5.2,   unit:"bu", cents:true, yahoo:"ZR=F"},
-  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:3.7,   unit:"bu", cents:true, yahoo:"ZS=F"},
-  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:18,    unit:"lb", cents:true, yahoo:"SB=F"},
-  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:2.5,   unit:"lb", cents:true, yahoo:"CT=F"},
-  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:1,     unit:"lb", cents:true, yahoo:"KC=F"},
-  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:0.5,   unit:"lb", cents:true, yahoo:"CC=F"},
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:12*QSCALE,    unit:"bu", cents:true, yahoo:"ZC=F"},
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:7.8*QSCALE,   unit:"bu", cents:true, yahoo:"ZW=F"},
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:5.2*QSCALE,   unit:"bu", cents:true, yahoo:"ZR=F"},
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:3.7*QSCALE,   unit:"bu", cents:true, yahoo:"ZS=F"},
+  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:18*QSCALE,    unit:"lb", cents:true, yahoo:"SB=F"},
+  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:2.5*QSCALE,   unit:"lb", cents:true, yahoo:"CT=F"},
+  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:1*QSCALE,     unit:"lb", cents:true, yahoo:"KC=F"},
+  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:0.5*QSCALE,   unit:"lb", cents:true, yahoo:"CC=F"},
 
-  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:25,     unit:"dmt", cents:false, yahoo:"TIO=F"},
-  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:19,     unit:"t",    cents:false, yahoo:"HRC=F"},
-  {key:"alum",   cat:"结构与制造", name:"铝",           qty:0.68,   unit:"t",    cents:false, yahoo:"ALI=F"},
-  {key:"copper", cat:"结构与制造", name:"铜",           qty:551.155,unit:"lb",   cents:false, yahoo:"HG=F"},
-  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:0.13,   unit:"t",    cents:false, yahoo:"ZNC=F"},
-  {key:"nickel", cat:"结构与制造", name:"镍",           qty:0.03,   unit:"t",    cents:false, yahoo:"MNI=F"},
-  {key:"cement", cat:"结构与制造", name:"水泥",         qty:40,     unit:"t",    cents:false, yahoo:"TIO=F"},
+  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:25*QSCALE,     unit:"dmt", cents:false, yahoo:"TIO=F"},
+  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:19*QSCALE,     unit:"t",    cents:false, yahoo:"HRC=F"},
+  {key:"alum",   cat:"结构与制造", name:"铝",           qty:0.68*QSCALE,   unit:"t",    cents:false, yahoo:"ALI=F"},
+  {key:"copper", cat:"结构与制造", name:"铜",           qty:551.155*QSCALE,unit:"lb",   cents:false, yahoo:"HG=F"},
+  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:0.13*QSCALE,   unit:"t",    cents:false, yahoo:"ZNC=F"},
+  {key:"nickel", cat:"结构与制造", name:"镍",           qty:0.03*QSCALE,   unit:"t",    cents:false, yahoo:"MNI=F"},
+  {key:"cement", cat:"结构与制造", name:"水泥",         qty:40*QSCALE,     unit:"t",    cents:false, yahoo:"TIO=F"},
 
-  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:0.0013, unit:"oz", cents:false, metal:"XAG"},
-  {key:"pall",   cat:"技术催化", name:"钯",         qty:0.00013,unit:"oz", cents:false, metal:"XPD"},
-  {key:"plat",   cat:"技术催化", name:"铂",         qty:0.00009,unit:"oz", cents:false, metal:"XPT"},
+  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:0.0013*QSCALE, unit:"oz", cents:false, metal:"XAG"},
+  {key:"pall",   cat:"技术催化", name:"钯",         qty:0.00013*QSCALE,unit:"oz", cents:false, metal:"XPD"},
+  {key:"plat",   cat:"技术催化", name:"铂",         qty:0.00009*QSCALE,unit:"oz", cents:false, metal:"XPT"},
 ];
 
 const TICKERS = [
@@ -288,13 +293,15 @@ function compute(){
     else { total+=v; ok++; cats[item.cat]+=v; }
     rows.push({item, q, v});
   }
-  return {total, complete: missing.length===0, missing, rows, cats, ok};
+  return {total, globalTotal: total*POP, complete: missing.length===0, missing, rows, cats, ok};
 }
 
 function render(){
   const g = compute();
   const el = document.getElementById("grrb");
-  el.textContent = g.complete ? money(g.total,0) : money(g.total,0)+"*";
+  el.textContent = g.complete ? money(g.globalTotal,0) : money(g.globalTotal,0)+"*";
+  const popEl = document.getElementById("pop");
+  popEl.textContent = (POP/1e9).toFixed(2)+" 亿";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
     chEl.textContent = "全部 "+BASKET.length+" 项实物组件已到位";
@@ -306,15 +313,15 @@ function render(){
   // 历史快照
   if(history.length){
     const prev = history[history.length-1];
-    if(prev && prev.v && g.total){
-      const d = (g.total-prev.v)/prev.v*100;
+    if(prev && prev.v && g.globalTotal){
+      const d = (g.globalTotal-prev.v)/prev.v*100;
       chEl.textContent += "  ·  "+pct(d)+" 相对上次快照";
       chEl.className = "change"+(d<0?" down":"");
     }
   }
   const last = history[history.length-1];
-  if(g.total && (!last || Math.abs(last.v-g.total)>0.5)){
-    history.push({t:Date.now(), v:g.total});
+  if(g.globalTotal && (!last || Math.abs(last.v-g.globalTotal)>0.5)){
+    history.push({t:Date.now(), v:g.globalTotal});
     if(history.length>80) history.shift();
     try{ localStorage.setItem(LS_HIST, JSON.stringify(history)); }catch{}
   }
