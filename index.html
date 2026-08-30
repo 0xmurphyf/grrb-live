@@ -205,15 +205,15 @@ const BASKET = [
   {key:"coal",   cat:"动力与能源", name:"煤炭",         unit:"t",     cents:false, yahoo:"MTF=F", annual:8.0e9,  src:"IEA 2024"},
   {key:"wti",    cat:"动力与能源", name:"WTI 原油",     unit:"bbl",   cents:false, yahoo:"CL=F",  annual:4.0e9,  src:"BP Stat Rev 2024"},
   {key:"brent",  cat:"动力与能源", name:"布伦特原油",   unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:3.8e9,  src:"BP Stat Rev 2024"},
-  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", unit:"MMBtu", cents:false, yahoo:"NG=F",  annual:4.0e13, src:"IEA 2024"},
+  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", unit:"MMBtu", cents:false, yahoo:"NG=F",  annual:1.5e11, src:"IEA 2024"},
   {key:"ho",     cat:"动力与能源", name:"取暖油",       unit:"gal",   cents:false, yahoo:"HO=F",  annual:3.0e10, src:"EIA 2024"},
   {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    unit:"gal",   cents:false, yahoo:"RB=F",  annual:4.0e10, src:"EIA 2024"},
   {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      unit:"lb",    cents:false, yahoo:"UX=F",  annual:1.3e8,  src:"World Nuclear 2024"},
 
-  {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e9,  src:"USDA 2024/25"},
-  {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e9,  src:"USDA 2024/25"},
-  {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e9,  src:"USDA 2024/25"},
-  {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e9,  src:"USDA 2024/25"},
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e10,  src:"USDA 2024/25"},
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e10,  src:"USDA 2024/25"},
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e10,  src:"USDA 2024/25"},
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e10,  src:"USDA 2024/25"},
   {key:"sugar",  cat:"生存与生物质", name:"原糖",  unit:"lb", cents:true, yahoo:"SB=F", annual:4.0e12, src:"ISO 2024"},
   {key:"cotton", cat:"生存与生物质", name:"棉花",  unit:"lb", cents:true, yahoo:"CT=F", annual:5.5e11, src:"ICAC 2024"},
   {key:"coffee", cat:"生存与生物质", name:"咖啡",  unit:"lb", cents:true, yahoo:"KC=F", annual:2.2e11, src:"ICO 2024"},
@@ -222,7 +222,7 @@ const BASKET = [
   {key:"iron",   cat:"结构与制造", name:"62%铁矿石", unit:"dmt", cents:false, yahoo:"TIO=F", annual:2.5e9,  src:"USGS 2024"},
   {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     unit:"t",    cents:false, yahoo:"HRC=F", annual:1.9e9,  src:"Worldsteel 2024"},
   {key:"alum",   cat:"结构与制造", name:"铝",           unit:"t",    cents:false, yahoo:"ALI=F", annual:7.0e7,  src:"USGS 2024"},
-  {key:"copper", cat:"结构与制造", name:"铜",           unit:"lb",   cents:false, yahoo:"HG=F", annual:5.5e12, src:"USGS 2024"},
+  {key:"copper", cat:"结构与制造", name:"铜",           unit:"lb",   cents:false, yahoo:"HG=F", annual:5.5e10, src:"USGS 2024"},
   {key:"zinc",   cat:"结构与制造", name:"锌",           unit:"t",    cents:false, yahoo:"ZNC=F", annual:1.3e7,  src:"USGS 2024"},
   {key:"nickel", cat:"结构与制造", name:"镍",           unit:"t",    cents:false, yahoo:"MNI=F", annual:3.5e6,  src:"USGS 2024"},
   {key:"cement", cat:"结构与制造", name:"水泥",         unit:"t",    cents:false, yahoo:"TIO=F", annual:4.1e9,  src:"USGS 2024"},
@@ -355,6 +355,13 @@ async function yahooProxyFetch(symbol, cents){
   if(!m) throw new Error("proxy no meta");
   let p = Number(m.regularMarketPrice);
   if(cents || m.currency==="USX") p = p/100;
+  if(m.currency && m.currency!=="USD" && m.currency!=="USX"){
+    try{
+      const fx = await fetchJson("https://open.er-api.com/v6/latest/"+m.currency);
+      const rate = fx && fx.rates && fx.rates.USD;
+      if(rate) p = p * rate;
+    }catch(e){}
+  }
   if(!Number.isFinite(p)) throw new Error("proxy no price");
   return {price:p, source:"Worker/"+symbol};
 }
