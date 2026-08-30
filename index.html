@@ -93,7 +93,6 @@ button:disabled{opacity:.55;cursor:default}
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
     <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
-    <button class="primary" id="btnNow" type="button">立即更新</button>
   </div>
 </header>
 
@@ -105,7 +104,7 @@ button:disabled{opacity:.55;cursor:default}
     <div class="meta" id="grrbMeta"></div>
     <div class="label" style="margin-top:18px">全球总消耗量</div>
     <div class="big" id="total" style="font-size:32px">—</div>
-    <div class="meta" style="margin-top:6px">年耗来源：
+    <div class="meta" style="margin-top:6px">
       <a href="https://www.usgs.gov/centers/national-minerals-information-center" target="_blank" rel="noopener">USGS/IEA/BP</a> ·
       <a href="https://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html" target="_blank" rel="noopener">BP Stat Rev</a> ·
       <a href="https://www.iea.org/" target="_blank" rel="noopener">IEA</a> ·
@@ -431,9 +430,14 @@ function render(){
     return `<div class="mini"><div class="k">${r.item.name}</div><div class="p">${money(r.v,0)}</div><div class="s">单价 ${money(cp.v, cp.v && cp.v<2?4:2)||"—"}/${cp.u} · 人均 ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u}</div></div>`;
   }).join("");
 
-  // 完整篮子表
+  // 完整篮子表：每类别内按美元价值降序
+  const sortedRows = [];
+  for(const cat of CAT_ORDER){
+    const inCat = g.rows.filter(r=>r.item.cat===cat).sort((a,b)=>(b.v||0)-(a.v||0));
+    sortedRows.push(...inCat);
+  }
   let lastCat="", body="";
-  for(const row of g.rows){
+  for(const row of sortedRows){
     if(row.item.cat!==lastCat){
       body += `<tr class="cat-h"><td colspan="6" class="${catClass(row.item.cat)}">${row.item.cat}</td></tr>`;
       lastCat = row.item.cat;
@@ -455,9 +459,9 @@ function render(){
   }
   document.getElementById("basketBody").innerHTML = body;
 
-  // 移动端栈
+  // 移动端栈（同样每类别内降序）
   lastCat=""; let stack="";
-  for(const row of g.rows){
+  for(const row of sortedRows){
     if(row.item.cat!==lastCat){
       stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${row.item.cat}</div>`;
       lastCat = row.item.cat;
@@ -500,8 +504,6 @@ function drawChart(){
 }
 
 async function refresh(force){
-  const btn=document.getElementById("btnNow");
-  btn.disabled=true;
   try{
     if(!force){
       try{
@@ -521,13 +523,11 @@ async function refresh(force){
     }
     await loadAll();
   } finally {
-    btn.disabled=false;
   }
 }
 
-document.getElementById("btnNow").onclick = ()=>refresh(true);
-refresh(false);
-setInterval(()=>refresh(false), TTL);
+refresh(true);
+setInterval(()=>refresh(true), 60*60*1000);
 </script>
 </body>
 </html>
