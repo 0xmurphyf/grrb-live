@@ -12,6 +12,10 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1120px;margin:auto;padding:28px 18px 72px}
+#langSwitch{position:fixed;top:14px;right:18px;z-index:50;display:flex;gap:4px;background:var(--elev);border:1px solid var(--line);border-radius:10px;padding:4px}
+.ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:13px;padding:6px 12px;cursor:pointer;border-radius:7px}
+.ls-btn.active{background:var(--accent);color:#071018;font-weight:600}
+@media(max-width:900px){#langSwitch{top:10px;right:10px}}
 .top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:26px}
 .kicker{font-size:11px;letter-spacing:.22em;color:var(--accent);font-weight:600;text-transform:uppercase}
 .title{font-size:36px;font-weight:650;margin:8px 0 0;letter-spacing:-.03em;text-wrap:balance}
@@ -95,15 +99,17 @@ button:disabled{opacity:.55;cursor:default}
 </head>
 <body>
 <div class="wrap">
+<div id="langSwitch">
+  <button type="button" data-lang="zh" class="ls-btn active">中</button>
+  <button type="button" data-lang="en" class="ls-btn">EN</button>
+</div>
 <header class="top">
   <div>
-    <div class="kicker" data-i18n="kicker">GRRB · 初级可交易原料篮子</div>
     <h1 class="title" data-i18n="title">全球实际资源篮子</h1>
     <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的<strong>初级可交易原料</strong>组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖燃料采出、生存生物质(全口径:食用+饲用+种子+工业)、结构制造(仅下游可交易成品,不收矿石)、技术催化四类。已删电力/汽油/柴油/一次能源总计等重复计价项;砂石骨料是物质流第一大头(按吨计市值不大),单独披露。不含股票、债券、货币、比特币或肉类(避免与饲料粮重叠)。</p>
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
     <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
-    <button class="primary" id="btnLang" type="button" style="min-height:36px;padding:6px 12px">EN</button>
   </div>
 </header>
 
@@ -157,22 +163,22 @@ button:disabled{opacity:.55;cursor:default}
 <script>
 // ===================== i18n =====================
 const I18N = {
-  zh:{ kicker:"GRRB · 全球实际资源篮子", title:"全球实际资源篮子",
+  zh:{ title:"全球实际资源篮子",
     sub:"一个<strong>固定数量</strong>的<strong>初级可交易原料</strong>组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖燃料采出、生存生物质(全口径:食用+饲用+种子+工业)、结构制造(仅下游可交易成品,不收矿石)、技术催化四类。已删电力/汽油/柴油/一次能源总计等重复计价项;砂石骨料是物质流第一大头(按吨计市值不大),单独披露。不含股票、债券、货币、比特币或肉类(避免与饲料粮重叠)。",
     statusWaiting:"等待数据", statusLive:"Live", perCap:"人均资源成本", aggregating:"正在聚合行情",
     allReady:"全部 26 项实物组件已到位", missing:"缺少", globalTotal:"全球总消耗量",
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
-    updated:"更新于", proxy:"近似", justNow:"刚刚更新", dataYear:"数据年份", popFallback:"人口按 83 亿估算" },
-  en:{ kicker:"GRRB · 初级可交易原料篮子", title:"Global Real Resource Basket",
-    sub:"A basket of <strong>fixed-quantity</strong> physical resources, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers four classes: Energy, Biomass, Manufacturing, Catalysts. Excludes stocks, bonds, currencies or bitcoin — only physical goods consumed to keep the world running, that can be mined/grown/smelted/produced.",
+    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算" },
+  en:{ title:"Global Real Resource Basket",
+    sub:"A basket of <strong>fixed-quantity</strong> <strong>primary tradable commodities</strong>, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers: extracted fuels, biomass (full scope: food+feed+seed+industrial), manufacturing (downstream tradable products only, no ores), catalysts. Double-counting items removed (electricity/gasoline/diesel/total-primary-energy). Sand & gravel is the largest by material flow (small by USD value), disclosed separately. Excludes stocks, bonds, currencies, bitcoin, or meat (to avoid overlap with feed grains).",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
     allReady:"All 26 components in place", missing:"Missing", globalTotal:"Global total consumption",
     pop:"Global population", popEst:"Global population (UN basis)", gdp:"Global annual GDP",
     catComp:"Class composition (by current USD value)", keyMkt:"Key market prices", fullBasket:"Full physical basket · 26 items",
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
-    updated:"Updated", proxy:"approx", justNow:"Just updated", dataYear:"Data year", popFallback:"Pop. est. at 8.3B" }
+    updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B" }
 };
 let LANG = localStorage.getItem("grrb.lang.v1") || "en";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
@@ -244,7 +250,8 @@ const NAME_EN = {
   coal:"Coal", wti:"WTI Crude", brent:"Brent Crude", ng:"Henry Hub Gas", ho:"Heating Oil", rbob:"RBOB Gasoline", uranium:"Uranium U3O8",
   corn:"Corn", wheat:"Wheat", rice:"Rice", soy:"Soybeans", sugar:"Raw Sugar", cotton:"Cotton", coffee:"Coffee", cocoa:"Cocoa",
   iron:"62% Iron Ore", hrc:"Hot-rolled Steel", alum:"Aluminum", copper:"Copper", zinc:"Zinc", nickel:"Nickel", cement:"Cement",
-  gold:"Industrial Gold", silver:"Industrial Silver", plat:"Platinum", pall:"Palladium"
+  gold:"Industrial Gold", silver:"Industrial Silver", plat:"Platinum", pall:"Palladium",
+  roundwood:"Industrial roundwood", sand:"Sand & gravel", phos:"Phosphate rock", potash:"Potash", ree:"Rare earth", lithium:"Lithium", cement_proxy:"Cement"
 };
 function itemName(item){ return LANG==="en" ? (NAME_EN[item.key]||item.name) : item.name; }
 // 人均数量 = 年耗 / 人口（POP 运行时取实时，兜底 POP_FALLBACK）
@@ -463,19 +470,6 @@ function render(){
     chEl.textContent = T("missing")+" "+g.missing.length+" 项："+g.missing.map(itemName).join("、");
     chEl.className = "change down";
   }
-  // 跟上一小时的 ±%
-  const cur = g.pop ? g.globalTotal/g.pop : null;
-  if(cur && history.length){
-    const cutoff = Date.now() - 60*60*1000;
-    let prev = null;
-    for(let i=history.length-1; i>=0; i--){ if(history[i].t <= cutoff){ prev = history[i]; break; } }
-    if(!prev) prev = history[0];
-    if(prev && prev.v){
-      const d = (cur-prev.v)/prev.v*100;
-      chEl.textContent += "  ·  "+pct(d);
-      chEl.className = "change"+(d<0?" down":"");
-    }
-  }
   // 历史快照（记录拉取时间，用于"上一次拉取成功"显示）
   const last = history[history.length-1];
   const curPerCap = g.pop ? g.globalTotal/g.pop : null;
@@ -594,7 +588,7 @@ async function refresh(force){
             Object.assign(quotes, snap.quotes||{});
             Object.assign(sources, snap.sources||{});
             render();
-            const _ft2=document.getElementById("freshTag"); if(_ft2) _ft2.textContent="8 小时缓存";
+            const _ft2=document.getElementById("freshTag"); if(_ft2) _ft2.textContent=T("fresh");
             document.getElementById("status").textContent="CACHED";
             return;
           }
@@ -612,10 +606,13 @@ setInterval(()=>refresh(true), 60*60*1000);
 
 // 语言切换按钮
 function updateLangBtn(){
-  const b = document.getElementById("btnLang");
-  if(b) b.textContent = (LANG==="zh") ? "EN" : "中";
+  document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{
+    b.classList.toggle("active", b.getAttribute("data-lang")===LANG);
+  });
 }
-document.getElementById("btnLang").onclick = ()=> setLang(LANG==="zh" ? "en" : "zh");
+document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{
+  b.onclick = ()=> setLang(b.getAttribute("data-lang"));
+});
 // applyStatic 后同步按钮文字
 const _applyStatic = applyStatic;
 applyStatic = function(){ _applyStatic(); updateLangBtn(); };
