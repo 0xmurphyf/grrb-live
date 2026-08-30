@@ -91,7 +91,7 @@ button:disabled{opacity:.55;cursor:default}
     <h1 class="title">全球实际资源篮子</h1>
     <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
-  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+  <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
     <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
     <button class="primary" id="btnNow" type="button">立即更新</button>
   </div>
@@ -189,7 +189,7 @@ const UCN = {t:"吨",bbl:"桶",MMBtu:"百万英热单位",gal:"加仑",bu:"蒲�
 function ucn(u){ return UCN[u] || u; }
 // SI 单位转换：原单位 → {factor(原→SI数值乘子), si: SI单位中文}
 // 蒲式耳(bu)为容量/农产品近似，按 ~25 kg/bu 估算
-const SI = {t:{f:1000,u:"千克"},dmt:{f:1000,u:"千克"},bbl:{f:0.158987,u:"立方米"},MMBtu:{f:1.055056,u:"吉焦"},gal:{f:3.78541,u:"升"},bu:{f:25,u:"千克(约)"},lb:{f:0.453592,u:"千克"},oz:{f:0.0283495,u:"千克"}};
+const SI = {t:{f:1000,u:"千克"},dmt:{f:1000,u:"千克"},bbl:{f:0.158987,u:"立方米"},MMBtu:{f:1.055056,u:"吉焦"},gal:{f:3.78541,u:"升"},bu:{f:25,u:"千克"},lb:{f:0.453592,u:"千克"},oz:{f:0.0283495,u:"千克"}};
 // 年耗来源机构 → 细粒度数据页
 const SRC_URL = {
   "IEA": "https://www.iea.org/",
@@ -367,7 +367,7 @@ function render(){
   const perCap = g.pop ? g.globalTotal / g.pop : null;
   el.textContent = g.complete && perCap!=null ? money(perCap,2) : money(g.globalTotal,0)+"*";
   const popEl = document.getElementById("pop");
-  popEl.textContent = (POP_LIVE||POP_FALLBACK).toLocaleString("en-US")+" 人";
+  popEl.textContent = (POP_LIVE||POP_FALLBACK).toLocaleString("en-US");
   const totalEl = document.getElementById("total");
   if(totalEl) totalEl.textContent = money(g.globalTotal,0);
   const popMeta = document.getElementById("popMeta");
