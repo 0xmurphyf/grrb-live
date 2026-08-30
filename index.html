@@ -379,7 +379,7 @@ function render(){
   const totalEl = document.getElementById("total");
   if(totalEl) totalEl.textContent = money(g.globalTotal,0);
   const popMeta = document.getElementById("popMeta");
-  if(popMeta) popMeta.innerHTML = POP_LIVE ? `<a href="https://www.worldometers.info/world-population/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">Worldometer 实时人口</a>` : "人口按 83 亿估算";
+  if(popMeta) popMeta.innerHTML = POP_LIVE ? `<a href="https://population.un.org/wpp/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">全球人口估算(UN 基准)</a>` : "人口按 83 亿估算";
   const gdpEl = document.getElementById("gdp");
   if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
   const gdpMeta = document.getElementById("gdpMeta");
@@ -475,7 +475,6 @@ function render(){
     return `<span class="chip ${cls}"><i></i>${item.name}${sources[item.key]?" · "+(sources[item.key].split(" ")[0]):""}</span>`;
   }).join("");
 
-  document.getElementById("grrbMeta").textContent = "全球总消耗 " + money(g.globalTotal,0) + " · " + hk(Date.now());
   document.getElementById("freshTag").textContent = "刚刚更新";
   const remain = TTL - (Date.now() % TTL);
   document.getElementById("nextMeta").textContent = "下次自动 "+Math.floor(remain/3600000)+" 小时 "+Math.floor((remain%3600000)/60000)+" 分后";
