@@ -198,6 +198,29 @@ function ucn(u){ return UCN[u] || u; }
 // SI 单位转换：原单位 → {factor(原→SI数值乘子), si: SI单位中文}
 // 蒲式耳(bu)为容量/农产品近似，按 ~25 kg/bu 估算
 const SI = {t:{f:1000,u:"千克"},dmt:{f:1000,u:"千克"},bbl:{f:0.158987,u:"立方米"},MMBtu:{f:1.055056,u:"吉焦"},gal:{f:3.78541,u:"升"},bu:{f:25,u:"千克(约)"},lb:{f:0.453592,u:"千克"},oz:{f:0.0283495,u:"千克"}};
+// 年耗来源机构 → 细粒度数据页
+const SRC_URL = {
+  "IEA": "https://www.iea.org/",
+  "BP Stat Rev": "https://www.bp.com/en/global/corporate/energy-economics/statistical-review-of-world-energy.html",
+  "EIA": "https://www.eia.gov/",
+  "World Nuclear": "https://www.world-nuclear.org/",
+  "USDA": "https://www.usda.gov/",
+  "ISO": "https://www.isosugar.org/",
+  "ICAC": "https://icac.org/",
+  "ICO": "https://ico.org/",
+  "ICCO": "https://www.icco.org/",
+  "USGS": "https://www.usgs.gov/centers/national-minerals-information-center",
+  "Worldsteel": "https://worldsteel.org/",
+  "Silver Inst.": "https://www.silverinstitute.org/",
+  "Johnson Matthey": "https://www.platinum.matthey.com/"
+};
+// 把 src 文本(如 "IEA 2024")包成可点击链接
+function srcLink(src){
+  if(!src) return "";
+  const key = Object.keys(SRC_URL).find(k=>src.includes(k));
+  const url = key ? SRC_URL[key] : "#";
+  return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${src}</a>`;
+}
 let useSI = true;
 // 数量/年耗转 SI：返回 {v, u}
 function convQty(unit, val){
@@ -352,15 +375,15 @@ function render(){
   const perCap = g.pop ? g.globalTotal / g.pop : null;
   el.textContent = g.complete && perCap!=null ? money(perCap,2) : money(g.globalTotal,0)+"*";
   const popEl = document.getElementById("pop");
-  popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e8).toFixed(2)+" 亿";
+  popEl.textContent = (POP_LIVE||POP_FALLBACK).toLocaleString("en-US")+" 人";
   const totalEl = document.getElementById("total");
   if(totalEl) totalEl.textContent = money(g.globalTotal,0);
   const popMeta = document.getElementById("popMeta");
-  if(popMeta) popMeta.textContent = POP_LIVE ? "人口数据已获取" : "人口按 83 亿估算";
+  if(popMeta) popMeta.innerHTML = POP_LIVE ? `<a href="https://www.worldometers.info/world-population/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">Worldometer 实时人口</a>` : "人口按 83 亿估算";
   const gdpEl = document.getElementById("gdp");
   if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
   const gdpMeta = document.getElementById("gdpMeta");
-  if(gdpMeta) gdpMeta.textContent = window.__gdpMeta || "";
+  if(gdpMeta) gdpMeta.innerHTML = window.__gdpMeta ? `<a href="https://data.worldbank.org/indicator/NY.GDP.MKTP.CD" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${window.__gdpMeta} · World Bank</a>` : "";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
     chEl.textContent = "全部 "+BASKET.length+" 项实物组件已到位";
@@ -417,10 +440,13 @@ function render(){
     }
     const share = g.total && row.v!=null ? (row.v/g.total*100).toFixed(1)+"%" : "—";
     const proxyNote = row.item.proxy ? ` <span class="proxy">*proxy</span>` : "";
+    const nameLink = row.item.yahoo
+      ? `<a href="https://finance.yahoo.com/quote/${row.item.yahoo}" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--faint)">${row.item.name}</a>`
+      : row.item.name;
     body += `<tr>
-      <td>${row.item.name}${proxyNote}</td>
+      <td>${nameLink}${proxyNote}</td>
       <td>${(()=>{const c=convQty(row.item.unit, qtyOf(row.item)); return c.v.toLocaleString(undefined,{maximumFractionDigits:4})+" "+c.u;})()}</td>
-      <td>${(()=>{const c=convQty(row.item.unit, row.item.annual); return c.v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+c.u;})()}<br><span class="meta">${row.item.src}</span></td>
+      <td>${(()=>{const c=convQty(row.item.unit, row.item.annual); return c.v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+c.u;})()}<br><span class="meta">${srcLink(row.item.src)}</span></td>
       <td class="num">${row.q.price==null?"—":money(convPrice(row.item.unit,row.q.price).v, row.q.price<2?4:2)}/${convPrice(row.item.unit,row.q.price).u}</td>
       <td class="num">${row.v==null?"—":money(row.v,0)}</td>
       <td class="num">${share}</td>
