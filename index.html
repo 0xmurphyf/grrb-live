@@ -95,6 +95,8 @@ button:disabled{opacity:.55;cursor:default}
     <div class="big" id="grrb">$—</div>
     <div id="grrbChange" class="change">正在聚合行情</div>
     <div class="meta" id="grrbMeta"></div>
+    <div class="label" style="margin-top:18px">全球总消耗量</div>
+    <div class="big" id="total" style="font-size:32px">—</div>
     <div class="label" style="margin-top:18px">当前全球总人口 <span class="tag" style="background:rgba(126,176,212,.14);color:var(--accent)">实时</span></div>
     <div class="big" id="pop" style="font-size:32px">—</div>
     <div class="meta" id="popMeta"></div>
@@ -325,6 +327,8 @@ function render(){
   popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e8).toFixed(2)+" 亿";
   const popMeta = document.getElementById("popMeta");
   if(popMeta) popMeta.textContent = (POP_LIVE ? "Worldometers 实时" : "兜底 83 亿") + (window.__popMeta?(" · "+window.__popMeta):"");
+  const totalEl = document.getElementById("total");
+  if(totalEl) totalEl.textContent = money(g.globalTotal,0);
   const gdpEl = document.getElementById("gdp");
   if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
   const gdpMeta = document.getElementById("gdpMeta");
@@ -367,10 +371,11 @@ function render(){
     </div>`;
   }).join("");
 
-  // 关键价格卡
-  document.getElementById("tickers").innerHTML = TICKERS.map(t=>{
-    const q = quotes[t.key]||{};
-    return `<div class="mini"><div class="k">${t.label}</div><div class="p">${money(q.price, q.price && q.price<2?4:2)||"—"}</div><div class="s">${sources[t.key]||"—"}</div></div>`;
+  // 关键价格卡：人均最贵的六项（按人均价值 v 降序）
+  const top = g.rows.filter(r=>r.v!=null).sort((a,b)=>b.v-a.v).slice(0,6);
+  document.getElementById("tickers").innerHTML = top.map(r=>{
+    const q = r.q;
+    return `<div class="mini"><div class="k">${r.item.name}</div><div class="p">${money(r.v,0)}</div><div class="s">单价 ${money(q.price, q.price && q.price<2?4:2)||"—"} · 人均 ${qtyOf(r.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${r.item.unit}</div></div>`;
   }).join("");
 
   // 完整篮子表
