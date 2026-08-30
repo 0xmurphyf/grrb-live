@@ -164,7 +164,7 @@ const I18N = {
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
-    updated:"更新于", proxy:"近似" },
+    updated:"更新于", proxy:"近似", justNow:"刚刚更新", dataYear:"数据年份", popFallback:"人口按 83 亿估算" },
   en:{ kicker:"GRRB · Global Real Resource Basket", title:"Global Real Resource Basket",
     sub:"A basket of <strong>fixed-quantity</strong> physical resources, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers four classes: Energy, Biomass, Manufacturing, Catalysts. Excludes stocks, bonds, currencies or bitcoin — only physical goods consumed to keep the world running, that can be mined/grown/smelted/produced.",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
@@ -172,7 +172,7 @@ const I18N = {
     pop:"Global population", popEst:"Global population (UN basis)", gdp:"Global annual GDP",
     catComp:"Class composition (by current USD value)", keyMkt:"Key market prices", fullBasket:"Full physical basket · 26 items",
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
-    updated:"Updated", proxy:"approx" }
+    updated:"Updated", proxy:"approx", justNow:"Just updated", dataYear:"Data year", popFallback:"Pop. est. at 8.3B" }
 };
 let LANG = localStorage.getItem("grrb.lang.v1") || "en";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
@@ -183,6 +183,7 @@ function siUnit(u){ return LANG==="en" ? (SI_EN[u]||u) : (SI[u]?SI[u].u:u); }
 function applyStatic(){
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = T(el.getAttribute("data-i18n")); });
   document.getElementById("status").textContent = (window.__loaded ? T("statusLive") : T("statusWaiting"));
+  const _gc = document.getElementById("grrbChange"); if(_gc && !window.__loaded) _gc.textContent = T("aggregating");
 }
 function setLang(l){ LANG = l; localStorage.setItem("grrb.lang.v1", l); applyStatic(); render(); }
 
@@ -418,7 +419,7 @@ async function fetchPopGdp(){
   try{
     const j = await fetchJson("https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1");
     const rec = j && j[1] && j[1][0];
-    if(rec && rec.value){ window.__gdp = rec.value; window.__gdpMeta = "数据年份 "+rec.date; }
+    if(rec && rec.value){ window.__gdp = rec.value; window.__gdpYear = rec.date; }
     else throw new Error("no gdp");
   }catch(e){ window.__gdpMeta = "获取失败"; }
 }
@@ -433,11 +434,11 @@ function render(){
   const totalEl = document.getElementById("total");
   if(totalEl) totalEl.textContent = money(g.globalTotal,0);
   const popMeta = document.getElementById("popMeta");
-  if(popMeta) popMeta.innerHTML = POP_LIVE ? `<a href="https://population.un.org/wpp/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${T("popEst")}</a>` : "人口按 83 亿估算";
+  if(popMeta) popMeta.innerHTML = POP_LIVE ? `<a href="https://population.un.org/wpp/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${T("popEst")}</a>` : T("popFallback");
   const gdpEl = document.getElementById("gdp");
   if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
   const gdpMeta = document.getElementById("gdpMeta");
-  if(gdpMeta) gdpMeta.innerHTML = window.__gdpMeta ? `<a href="https://data.worldbank.org/indicator/NY.GDP.MKTP.CD" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${window.__gdpMeta} · World Bank</a>` : "";
+  if(gdpMeta) gdpMeta.innerHTML = window.__gdpYear ? `<a href="https://data.worldbank.org/indicator/NY.GDP.MKTP.CD" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${T("dataYear")} ${window.__gdpYear} · World Bank</a>` : "";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
     chEl.textContent = T("allReady");
@@ -490,7 +491,7 @@ function render(){
     const q = r.q;
     const cq = convQty(r.item.unit, qtyOf(r.item));
     const cp = convPrice(r.item.unit, q.price);
-    return `<div class="mini"><div class="k">${itemName(r.item)}</div><div class="p">${money(r.v,0)}</div><div class="s">单价 ${money(cp.v, cp.v && cp.v<2?4:2)||"—"}/${cp.u} · 人均 ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u}</div></div>`;
+    return `<div class="mini"><div class="k">${itemName(r.item)}</div><div class="p">${money(r.v,0)}</div><div class="s">${T("thPrice")} ${money(cp.v, cp.v && cp.v<2?4:2)||"—"}/${cp.u} · ${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u}</div></div>`;
   }).join("");
 
   // 完整篮子表：每类别内按美元价值降序
@@ -533,11 +534,11 @@ function render(){
     const ca = convQty(row.item.unit, row.item.annual);
     const cp = convPrice(row.item.unit, row.q.price);
     const ledCls = row.item.proxy ? "led warn" : (row.q.price!=null ? "led ok" : "led fail");
-    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">人均 ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · 年耗 ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${ca.u} (${row.item.src})</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · ${T("thAnnual")} ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${cq.u} (${row.item.src})</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
-  document.getElementById("freshTag").textContent = "刚刚更新";
+  const _ft=document.getElementById("freshTag"); if(_ft) _ft.textContent=T("justNow");
   document.getElementById("status").textContent = "LIVE · "+new Date().toLocaleTimeString("zh-CN");
 }
 
@@ -577,7 +578,7 @@ async function refresh(force){
             Object.assign(quotes, snap.quotes||{});
             Object.assign(sources, snap.sources||{});
             render();
-            document.getElementById("freshTag").textContent="8 小时缓存";
+            const _ft2=document.getElementById("freshTag"); if(_ft2) _ft2.textContent="8 小时缓存";
             document.getElementById("status").textContent="CACHED";
             return;
           }
