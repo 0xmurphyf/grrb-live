@@ -91,7 +91,7 @@ button:disabled{opacity:.55;cursor:default}
 
 <div class="grid">
   <section class="card">
-    <div class="label">当前全球总消耗</div>
+    <div class="label">人均资源成本 <span class="tag" style="background:rgba(126,176,212,.14);color:var(--accent)">总消耗 ÷ 人口</span></div>
     <div class="big" id="grrb">$—</div>
     <div id="grrbChange" class="change">正在聚合行情</div>
     <div class="meta" id="grrbMeta"></div>
@@ -319,9 +319,10 @@ async function fetchPopGdp(){
 function render(){
   const g = compute();
   const el = document.getElementById("grrb");
-  el.textContent = g.complete ? money(g.globalTotal,0) : money(g.globalTotal,0)+"*";
+  const perCap = g.pop ? g.globalTotal / g.pop : null;
+  el.textContent = g.complete && perCap!=null ? money(perCap,2) : money(g.globalTotal,0)+"*";
   const popEl = document.getElementById("pop");
-  popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e9).toFixed(2)+" 亿";
+  popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e8).toFixed(2)+" 亿";
   const popMeta = document.getElementById("popMeta");
   if(popMeta) popMeta.textContent = (POP_LIVE ? "Worldometers 实时" : "兜底 83 亿") + (window.__popMeta?(" · "+window.__popMeta):"");
   const gdpEl = document.getElementById("gdp");
@@ -336,18 +337,20 @@ function render(){
     chEl.textContent = "缺少 "+g.missing.length+" 项："+g.missing.join("、");
     chEl.className = "change down";
   }
-  // 历史快照
+  // 历史快照（人均口径，与主卡一致）
   if(history.length){
     const prev = history[history.length-1];
-    if(prev && prev.v && g.globalTotal){
-      const d = (g.globalTotal-prev.v)/prev.v*100;
+    const cur = g.pop ? g.globalTotal/g.pop : null;
+    if(prev && prev.v && cur){
+      const d = (cur-prev.v)/prev.v*100;
       chEl.textContent += "  ·  "+pct(d)+" 相对上次快照";
       chEl.className = "change"+(d<0?" down":"");
     }
   }
   const last = history[history.length-1];
-  if(g.globalTotal && (!last || Math.abs(last.v-g.globalTotal)>0.5)){
-    history.push({t:Date.now(), v:g.globalTotal});
+  const curPerCap = g.pop ? g.globalTotal/g.pop : null;
+  if(curPerCap && (!last || Math.abs(last.v-curPerCap)>0.005)){
+    history.push({t:Date.now(), v:curPerCap});
     if(history.length>80) history.shift();
     try{ localStorage.setItem(LS_HIST, JSON.stringify(history)); }catch{}
   }
@@ -408,7 +411,7 @@ function render(){
     return `<span class="chip ${cls}"><i></i>${item.name}${sources[item.key]?" · "+(sources[item.key].split(" ")[0]):""}</span>`;
   }).join("");
 
-  document.getElementById("grrbMeta").textContent = hk(Date.now());
+  document.getElementById("grrbMeta").textContent = "全球总消耗 " + money(g.globalTotal,0) + " · " + hk(Date.now());
   document.getElementById("freshTag").textContent = "刚刚更新";
   const remain = TTL - (Date.now() % TTL);
   document.getElementById("nextMeta").textContent = "下次自动 "+Math.floor(remain/3600000)+" 小时 "+Math.floor((remain%3600000)/60000)+" 分后";
