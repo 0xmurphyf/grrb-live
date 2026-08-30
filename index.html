@@ -84,30 +84,30 @@ button:disabled{opacity:.55;cursor:default}
   <div>
     <div class="kicker">GRRB · Global Real Resource Basket</div>
     <h1 class="title">全球实际资源篮子</h1>
-    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>（年耗为权威年度统计值，人口实时抓取）。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
+    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
   <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
 </header>
 
 <div class="grid">
   <section class="card">
-    <div class="label">人均资源成本 <span class="tag" style="background:rgba(126,176,212,.14);color:var(--accent)">总消耗 ÷ 人口</span></div>
+    <div class="label">人均资源成本</div>
     <div class="big" id="grrb">$—</div>
     <div id="grrbChange" class="change">正在聚合行情</div>
     <div class="meta" id="grrbMeta"></div>
     <div class="label" style="margin-top:18px">全球总消耗量</div>
     <div class="big" id="total" style="font-size:32px">—</div>
-    <div class="label" style="margin-top:18px">当前全球总人口 <span class="tag" style="background:rgba(126,176,212,.14);color:var(--accent)">实时</span></div>
+    <div class="label" style="margin-top:18px">当前全球总人口</div>
     <div class="big" id="pop" style="font-size:32px">—</div>
     <div class="meta" id="popMeta"></div>
-    <div class="label" style="margin-top:18px">当前全球年 GDP <span class="tag" style="background:rgba(201,184,150,.14);color:var(--metal)">权威年度值</span></div>
+    <div class="label" style="margin-top:18px">当前全球年 GDP</div>
     <div class="big" id="gdp" style="font-size:32px">—</div>
     <div class="meta" id="gdpMeta"></div>
     <canvas id="chart" width="1000" height="220" style="width:100%;height:220px;background:#091522;border-radius:10px;margin-top:16px"></canvas>
   </section>
 
   <section class="card">
-    <div class="label">类别构成（按当前美元价值，自然涌现）</div>
+    <div class="label">类别构成（按当前美元价值）</div>
     <div class="bars" id="catBars"></div>
   </section>
 
@@ -120,7 +120,7 @@ button:disabled{opacity:.55;cursor:default}
     <div class="label">完整实物篮子 · 25 项</div>
     <div class="desk">
       <table>
-        <thead><tr><th>代表资源</th><th>人均数量</th><th>年耗(权威)</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
+        <thead><tr><th>代表资源</th><th>人均数量</th><th>年耗</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
         <tbody id="basketBody"></tbody>
       </table>
     </div>
@@ -307,16 +307,16 @@ function compute(){
   return {total, pop: POP_LIVE || POP_FALLBACK, globalTotal: grandTotal, complete: missing.length===0, missing, rows, cats, ok};
 }
 
-// ---------- 实时全球人口（经 CF Worker 代理）/ 权威 GDP（World Bank 直连，自带 CORS）----------
+// ---------- 人口（经 CF Worker 代理）/ GDP（World Bank 直连，自带 CORS）----------
 async function fetchPopGdp(){
   try{
     const j = await fetchJson(PROXY_BASE+"/pop");
     if(j && j.pop){ POP_LIVE = j.pop; window.__popMeta = j.source; }
-  }catch(e){ window.__popMeta = "实时获取失败,用兜底 83 亿"; }
+  }catch(e){ window.__popMeta = "人口获取失败,按 83 亿估算"; }
   try{
     const j = await fetchJson("https://api.worldbank.org/v2/country/WLD/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1");
     const rec = j && j[1] && j[1][0];
-    if(rec && rec.value){ window.__gdp = rec.value; window.__gdpMeta = "World Bank "+rec.date; }
+    if(rec && rec.value){ window.__gdp = rec.value; window.__gdpMeta = "数据年份 "+rec.date; }
     else throw new Error("no gdp");
   }catch(e){ window.__gdpMeta = "获取失败"; }
 }
@@ -328,14 +328,14 @@ function render(){
   el.textContent = g.complete && perCap!=null ? money(perCap,2) : money(g.globalTotal,0)+"*";
   const popEl = document.getElementById("pop");
   popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e8).toFixed(2)+" 亿";
-  const popMeta = document.getElementById("popMeta");
-  if(popMeta) popMeta.textContent = (POP_LIVE ? "Worldometers 实时" : "兜底 83 亿") + (window.__popMeta?(" · "+window.__popMeta):"");
   const totalEl = document.getElementById("total");
   if(totalEl) totalEl.textContent = money(g.globalTotal,0);
+  const popMeta = document.getElementById("popMeta");
+  if(popMeta) popMeta.textContent = POP_LIVE ? "人口数据已获取" : "人口按 83 亿估算";
   const gdpEl = document.getElementById("gdp");
   if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
   const gdpMeta = document.getElementById("gdpMeta");
-  if(gdpMeta) gdpMeta.textContent = window.__gdpMeta || "拉取中";
+  if(gdpMeta) gdpMeta.textContent = window.__gdpMeta || "";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
     chEl.textContent = "全部 "+BASKET.length+" 项实物组件已到位";
