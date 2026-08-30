@@ -186,6 +186,9 @@ const BASKET = [
 ];
 // 人均数量 = 年耗 / 人口（POP 运行时取实时，兜底 POP_FALLBACK）
 function qtyOf(item){ return item.annual / (POP_LIVE || POP_FALLBACK); }
+// 英文单位 → 中文显示
+const UCN = {t:"吨",bbl:"桶",MMBtu:"百万英热单位",gal:"加仑",bu:"蒲式耳",lb:"磅",oz:"盎司",dmt:"干吨"};
+function ucn(u){ return UCN[u] || u; }
 
 const TICKERS = [
   {key:"coal",   label:"煤炭 / t"},
@@ -378,7 +381,7 @@ function render(){
   const top = g.rows.filter(r=>r.v!=null).sort((a,b)=>b.v-a.v).slice(0,6);
   document.getElementById("tickers").innerHTML = top.map(r=>{
     const q = r.q;
-    return `<div class="mini"><div class="k">${r.item.name}</div><div class="p">${money(r.v,0)}</div><div class="s">单价 ${money(q.price, q.price && q.price<2?4:2)||"—"} · 人均 ${qtyOf(r.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${r.item.unit}</div></div>`;
+    return `<div class="mini"><div class="k">${r.item.name}</div><div class="p">${money(r.v,0)}</div><div class="s">单价 ${money(q.price, q.price && q.price<2?4:2)||"—"} · 人均 ${qtyOf(r.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${ucn(r.item.unit)}</div></div>`;
   }).join("");
 
   // 完整篮子表
@@ -392,8 +395,8 @@ function render(){
     const proxyNote = row.item.proxy ? ` <span class="proxy">*proxy</span>` : "";
     body += `<tr>
       <td>${row.item.name}${proxyNote}</td>
-      <td>${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${row.item.unit}</td>
-      <td>${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${row.item.unit}<br><span class="meta">${row.item.src}</span></td>
+      <td>${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${ucn(row.item.unit)}</td>
+      <td>${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${ucn(row.item.unit)}<br><span class="meta">${row.item.src}</span></td>
       <td class="num">${row.q.price==null?"—":money(row.q.price, row.q.price<2?4:2)}</td>
       <td class="num">${row.v==null?"—":money(row.v,0)}</td>
       <td class="num">${share}</td>
@@ -408,7 +411,7 @@ function render(){
       stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${row.item.cat}</div>`;
       lastCat = row.item.cat;
     }
-    stack += `<div class="row"><div class="l">${row.item.name}<div class="sub">人均 ${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${row.item.unit} · 年耗 ${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${row.item.unit} (${row.item.src})</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    stack += `<div class="row"><div class="l">${row.item.name}<div class="sub">人均 ${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${ucn(row.item.unit)} · 年耗 ${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${ucn(row.item.unit)} (${row.item.src})</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
