@@ -20,9 +20,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex S
 .dot{display:inline-block;width:7px;height:7px;background:var(--gain);border-radius:50%;margin-right:7px;animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.4;transform:scale(.85)}}
 @media (prefers-reduced-motion:reduce){.dot{animation:none}}
-.note-box{border:1px solid var(--line);background:var(--elev);border-radius:16px;padding:16px 18px;margin:0 0 28px;line-height:1.7;color:var(--mute);font-size:14px}
-.note-box b{color:var(--ink);font-weight:600}
-.section{font-size:18px;font-weight:600;margin:8px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stack{display:none}
 .tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(93,190,138,.14);color:var(--gain)}
 .grid{display:grid;gap:14px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
@@ -63,7 +61,6 @@ button:disabled{opacity:.55;cursor:default}
 .chip.on{color:var(--gain)} .chip.off{color:var(--loss)}
 .chip.warn{color:var(--metal)}
 .chip i{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
-.proxy{color:var(--metal);font-size:11px}
 .stack{display:none}
 @media(max-width:900px){
   .cards{grid-template-columns:1fr 1fr}
@@ -87,16 +84,11 @@ button:disabled{opacity:.55;cursor:default}
   <div>
     <div class="kicker">GRRB · Global Real Resource Basket</div>
     <h1 class="title">全球实际资源篮子</h1>
-    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 × 万分之一</strong>（一分部不预设权重）。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物（含生产性使用，非仅耗散）。</p>
+    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 ÷ 亿分之一</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
   <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
 </header>
 
-<div class="note-box">
-  <b>篮子怎么读。</b>数量 = 全球实际年消耗量 ÷ 10000（万分之一），价格随市场变动。例如全球煤炭年耗约80亿吨，篮子固定取80万...（按合理合约单位调整）。<strong>权重不由设计者预设，而由"市场价格 × 实际消耗数量"自然涌现。</strong>贵金属仅保留工业用途（铂/钯/银），黄金归零（去投资/货币属性）。带 <span class="proxy">*proxy</span> 者无直接全球期货，用相关合约近似；<span class="proxy">*fixed</span> 者无可靠实时源，用近期固定参考价。
-</div>
-
-<div class="section">GRRB / USD <span class="tag" id="freshTag">8 小时缓存</span></div>
 <div class="grid">
   <section class="card">
     <div class="label">实物资源篮子的美元成本</div>
@@ -125,7 +117,6 @@ button:disabled{opacity:.55;cursor:default}
       </table>
     </div>
     <div class="stack" id="basketStack"></div>
-    <div class="formula">GRRB(t) = Σ [ (全球年消耗量 ÷ 10000) × 当前 USD 价格 ÷ 报价单位 ]</div>
   </section>
 
   <section class="card">
@@ -136,14 +127,6 @@ button:disabled{opacity:.55;cursor:default}
     </div>
     <div class="meta" id="nextMeta" style="margin-top:10px"></div>
     <div class="diag" id="diag" style="margin-top:14px"></div>
-    <p class="fine">
-      <b>数据源（多层 fallback，单源失败不影响其余项）：</b><br>
-      · 贵金属：api.gold-api.com（无需 key，CORS 友好）→ Yahoo query2 v10 兜底。<br>
-      · 期货/能源/农产品/金属：Yahoo Finance。优先 <code>query2.finance.yahoo.com/v10/finance/quoteSummary</code>（较宽松），失败则尝试 v8 chart 直连，再失败则经 AllOrigins / Corsproxy.io CORS 代理。<br>
-      · <span class="proxy">*proxy</span> 品种（水泥、砂石）无标准全球期货，复用相关合约或近期固定参考价，不代表真实可交易价格。<br>
-      · 美农期货（玉米/小麦/稻米/大豆/糖/棉/咖啡/可可）Yahoo 以美分报价，已 ÷100。<br>
-      · 任何品种取数失败 → 显示 DATA INCOMPLETE，指数照常计算其余项。默认 8 小时刷新一次。
-    </p>
   </section>
 </div>
 </div>
@@ -153,56 +136,41 @@ const TTL = 8 * 60 * 60 * 1000;
 const LS_SNAP = "grrb.snap.v3";
 const LS_HIST = "grrb.hist.v3";
 
-// === 行情代理(Cloudflare Worker,绕开 Yahoo 对浏览器/云 IP 的 429 限流)===
-// 部署: wrangler deploy (worker.mjs)。端点: /yahoo/<SYMBOL>
-const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
-
 // =====================================================================
-// BASKET: 数量 = 全球实际年消耗量 ÷ 10000（万分之一），不分预设权重
+// BASKET: 数量 = 全球实际年消耗量 ÷ 100000000（亿分之一），不分预设权重
 // cents=true   => Yahoo 以美分(cent)报价，需 /100
 // metal="XAG"  => 走 Gold-API 贵金属源
-// proxy=true   => 无直接全球期货，复用相关合约（仅近似）
-// fixed={price, source} => 无可靠实时源，用近期固定参考价（标注 *fixed）
 // =====================================================================
+const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
 const BASKET = [
-  // ---- 动力与能源（年耗约数百亿吨）----
-  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:800000, unit:"t",     cents:false, yahoo:"MTF=F"},   // 全球~80亿t/年
-  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:40000,  unit:"bbl",   cents:false, yahoo:"CL=F"},    // 全球~40亿bbl/年(折算)
-  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:30000,  unit:"bbl",   cents:false, yahoo:"BZ=F"},
-  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:400000, unit:"MMBtu", cents:false, yahoo:"NG=F"},    // 全球~4万亿m³
-  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:5000,   unit:"gal",   cents:false, yahoo:"HO=F"},
-  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:5000,   unit:"gal",   cents:false, yahoo:"RB=F"},
-  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:60,     unit:"lb",    cents:false, yahoo:"UX=F"},
+  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:80,     unit:"t",     cents:false, yahoo:"MTF=F"},
+  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:4,      unit:"bbl",   cents:false, yahoo:"CL=F"},
+  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:3,      unit:"bbl",   cents:false, yahoo:"BZ=F"},
+  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:40,     unit:"MMBtu", cents:false, yahoo:"NG=F"},
+  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:0.5,    unit:"gal",   cents:false, yahoo:"HO=F"},
+  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:0.5,    unit:"gal",   cents:false, yahoo:"RB=F"},
+  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:0.006,  unit:"lb",    cents:false, yahoo:"UX=F"},
 
-  // ---- 生存与生物质（年耗数十亿吨）----
-  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:120000, unit:"bu", cents:true, yahoo:"ZC=F"},   // 全球~12亿t
-  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:78000,  unit:"bu", cents:true, yahoo:"ZW=F"},   // 全球~7.8亿t
-  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:52000,  unit:"bu", cents:true, yahoo:"ZR=F"},   // 全球~5.2亿t
-  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:37000,  unit:"bu", cents:true, yahoo:"ZS=F"},   // 全球~3.7亿t
-  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:180000, unit:"lb", cents:true, yahoo:"SB=F"},
-  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:25000,  unit:"lb", cents:true, yahoo:"CT=F"},
-  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:10000,  unit:"lb", cents:true, yahoo:"KC=F"},
-  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:5000,   unit:"lb", cents:true, yahoo:"CC=F"},
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:12,    unit:"bu", cents:true, yahoo:"ZC=F"},
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:7.8,   unit:"bu", cents:true, yahoo:"ZW=F"},
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:5.2,   unit:"bu", cents:true, yahoo:"ZR=F"},
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:3.7,   unit:"bu", cents:true, yahoo:"ZS=F"},
+  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:18,    unit:"lb", cents:true, yahoo:"SB=F"},
+  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:2.5,   unit:"lb", cents:true, yahoo:"CT=F"},
+  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:1,     unit:"lb", cents:true, yahoo:"KC=F"},
+  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:0.5,   unit:"lb", cents:true, yahoo:"CC=F"},
 
-  // ---- 结构与制造 ----
-  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:250000, unit:"dmt", cents:false, yahoo:"TIO=F"},  // 全球~25亿t
-  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:190000, unit:"t",    cents:false, yahoo:"HRC=F"},  // 全球~19亿t粗钢
-  // 金属期货报价单位约定：HG(铜)=USD/lb；ALI(铝)/ZNC(锌)/NI(镍)/HRC(热卷)/TIO(铁矿)=USD/公吨。
-  // qty 一律写成"合约报价单位"，使 lineVal = price × qty 无需额外换算。
-  //   全球年耗(t) → 万分之一(t) → 按报价单位换算：
-  //   报价单位为 lb 的金属: t × 2204.62 = lb
-  //   报价单位为 t  的金属: 直接用万分之一的 t 数
-  {key:"alum",   cat:"结构与制造", name:"铝",           qty:6800,    unit:"t",    cents:false, yahoo:"ALI=F"},  // 全球~6800万t, 万分之一=6800t, ALI按吨
-  {key:"copper", cat:"结构与制造", name:"铜",           qty:5511550, unit:"lb",   cents:false, yahoo:"HG=F"},   // 全球~2500万t, /1e4=2500t ×2204.62=5,511,550lb, HG按磅
-  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:1300,    unit:"t",    cents:false, yahoo:"ZNC=F"},  // 全球~1300万t, /1e4=1300t, ZNC按吨
-  {key:"nickel", cat:"结构与制造", name:"镍",           qty:300,     unit:"t",    cents:false, yahoo:"MNI=F"},  // 全球~300万t, /1e4=300t, MNI(LME)按吨
-  {key:"cement", cat:"结构与制造", name:"水泥",         qty:400000,  unit:"t",    cents:false, yahoo:"TIO=F", proxy:true}, // 全球~40亿t, /1e4=40万t, 复用铁矿合约近似
+  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:25,     unit:"dmt", cents:false, yahoo:"TIO=F"},
+  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:19,     unit:"t",    cents:false, yahoo:"HRC=F"},
+  {key:"alum",   cat:"结构与制造", name:"铝",           qty:0.68,   unit:"t",    cents:false, yahoo:"ALI=F"},
+  {key:"copper", cat:"结构与制造", name:"铜",           qty:551.155,unit:"lb",   cents:false, yahoo:"HG=F"},
+  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:0.13,   unit:"t",    cents:false, yahoo:"ZNC=F"},
+  {key:"nickel", cat:"结构与制造", name:"镍",           qty:0.03,   unit:"t",    cents:false, yahoo:"MNI=F"},
+  {key:"cement", cat:"结构与制造", name:"水泥",         qty:40,     unit:"t",    cents:false, yahoo:"TIO=F"},
 
-  // ---- 技术催化（仅工业用途，黄金归零）----
-  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:130, unit:"oz", cents:false, metal:"XAG"},  // 全球~1.3万吨(工业)
-  {key:"pall",   cat:"技术催化", name:"钯",         qty:13,  unit:"oz", cents:false, metal:"XPD"},   // 全球~300t(工业部分)
-  {key:"plat",   cat:"技术催化", name:"铂",         qty:9,   unit:"oz", cents:false, metal:"XPT"},   // 全球~200t(工业部分)
-  // 黄金：归零，不列入（投资/货币属性，非维持运作的实际消耗）
+  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:0.0013, unit:"oz", cents:false, metal:"XAG"},
+  {key:"pall",   cat:"技术催化", name:"钯",         qty:0.00013,unit:"oz", cents:false, metal:"XPD"},
+  {key:"plat",   cat:"技术催化", name:"铂",         qty:0.00009,unit:"oz", cents:false, metal:"XPT"},
 ];
 
 const TICKERS = [
