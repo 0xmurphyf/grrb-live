@@ -97,9 +97,9 @@ button:disabled{opacity:.55;cursor:default}
 <div class="wrap">
 <header class="top">
   <div>
-    <div class="kicker" data-i18n="kicker">GRRB · Global Real Resource Basket</div>
+    <div class="kicker" data-i18n="kicker">GRRB · 初级可交易原料篮子</div>
     <h1 class="title" data-i18n="title">全球实际资源篮子</h1>
-    <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
+    <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的<strong>初级可交易原料</strong>组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖燃料采出、生存生物质(全口径:食用+饲用+种子+工业)、结构制造(仅下游可交易成品,不收矿石)、技术催化四类。已删电力/汽油/柴油/一次能源总计等重复计价项;砂石骨料是物质流第一大头(按吨计市值不大),单独披露。不含股票、债券、货币、比特币或肉类(避免与饲料粮重叠)。</p>
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
     <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
@@ -158,14 +158,14 @@ button:disabled{opacity:.55;cursor:default}
 // ===================== i18n =====================
 const I18N = {
   zh:{ kicker:"GRRB · 全球实际资源篮子", title:"全球实际资源篮子",
-    sub:"一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。",
+    sub:"一个<strong>固定数量</strong>的<strong>初级可交易原料</strong>组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖燃料采出、生存生物质(全口径:食用+饲用+种子+工业)、结构制造(仅下游可交易成品,不收矿石)、技术催化四类。已删电力/汽油/柴油/一次能源总计等重复计价项;砂石骨料是物质流第一大头(按吨计市值不大),单独披露。不含股票、债券、货币、比特币或肉类(避免与饲料粮重叠)。",
     statusWaiting:"等待数据", statusLive:"Live", perCap:"人均资源成本", aggregating:"正在聚合行情",
     allReady:"全部 26 项实物组件已到位", missing:"缺少", globalTotal:"全球总消耗量",
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
     updated:"更新于", proxy:"近似", justNow:"刚刚更新", dataYear:"数据年份", popFallback:"人口按 83 亿估算" },
-  en:{ kicker:"GRRB · Global Real Resource Basket", title:"Global Real Resource Basket",
+  en:{ kicker:"GRRB · 初级可交易原料篮子", title:"Global Real Resource Basket",
     sub:"A basket of <strong>fixed-quantity</strong> physical resources, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers four classes: Energy, Biomass, Manufacturing, Catalysts. Excludes stocks, bonds, currencies or bitcoin — only physical goods consumed to keep the world running, that can be mined/grown/smelted/produced.",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
     allReady:"All 26 components in place", missing:"Missing", globalTotal:"Global total consumption",
@@ -181,7 +181,7 @@ function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
 const SI_EN = {t:"kg",dmt:"kg",bbl:"m³",MMBtu:"GJ",gal:"L",bu:"kg",lb:"kg",oz:"kg"};
 function siUnit(u){ return LANG==="en" ? (SI_EN[u]||u) : (SI[u]?SI[u].u:u); }
 function applyStatic(){
-  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = T(el.getAttribute("data-i18n")); });
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ const k=el.getAttribute("data-i18n"); let txt=T(k); if(k==="fullBasket") txt=txt.replace("26", BASKET.length); el.innerHTML = txt; });
   document.getElementById("status").textContent = (window.__loaded ? T("statusLive") : T("statusWaiting"));
   const _gc = document.getElementById("grrbChange"); if(_gc && !window.__loaded) _gc.textContent = T("aggregating");
 }
@@ -202,35 +202,42 @@ const POP_FALLBACK = 8300000000; // 兜底：World Bank/UN 2026 约 83 亿
 // annual = 全球年消耗量（合约报价单位）；src = 权威来源年份
 // qty 自动 = annual / 全球人口（人均）
 const BASKET = [
+  // === 动力与能源(仅"燃料采出市值";已删电力/汽油/柴油/一次能源总计等重复计价项)===
   {key:"coal",   cat:"动力与能源", name:"煤炭",         unit:"t",     cents:false, yahoo:"MTF=F", annual:8.0e9,  src:"IEA 2024"},
   {key:"wti",    cat:"动力与能源", name:"WTI 原油",     unit:"bbl",   cents:false, yahoo:"CL=F",  annual:4.0e9,  src:"BP Stat Rev 2024"},
   {key:"brent",  cat:"动力与能源", name:"布伦特原油",   unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:3.8e9,  src:"BP Stat Rev 2024"},
   {key:"ng",     cat:"动力与能源", name:"亨利港天然气", unit:"MMBtu", cents:false, yahoo:"NG=F",  annual:1.5e11, src:"IEA 2024"},
-  {key:"ho",     cat:"动力与能源", name:"取暖油",       unit:"gal",   cents:false, yahoo:"HO=F",  annual:3.0e10, src:"EIA 2024"},
-  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    unit:"gal",   cents:false, yahoo:"RB=F",  annual:4.0e10, src:"EIA 2024"},
   {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      unit:"lb",    cents:false, yahoo:"UX=F",  annual:1.3e8,  src:"World Nuclear 2024"},
 
-  {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e10,  src:"USDA 2024/25"},
-  {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e10,  src:"USDA 2024/25"},
-  {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e10,  src:"USDA 2024/25"},
-  {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e10,  src:"USDA 2024/25"},
+  // === 生存与生物质(USDA/FAO 全口径:食用+饲用+种子+工业;不收肉类,避免与饲料粮重叠)===
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e10,  src:"USDA 总消费 2024/25"},
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e10,  src:"USDA 总消费 2024/25"},
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e10,  src:"USDA 总消费 2024/25"},
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e10,  src:"USDA 总消费 2024/25"},
   {key:"sugar",  cat:"生存与生物质", name:"原糖",  unit:"lb", cents:true, yahoo:"SB=F", annual:4.0e12, src:"ISO 2024"},
   {key:"cotton", cat:"生存与生物质", name:"棉花",  unit:"lb", cents:true, yahoo:"CT=F", annual:5.5e11, src:"ICAC 2024"},
   {key:"coffee", cat:"生存与生物质", name:"咖啡",  unit:"lb", cents:true, yahoo:"KC=F", annual:2.2e11, src:"ICO 2024"},
   {key:"cocoa",  cat:"生存与生物质", name:"可可",  unit:"lb", cents:true, yahoo:"CC=F", annual:1.1e10, src:"ICCO 2024"},
+  {key:"roundwood",cat:"生存与生物质", name:"工业原木", unit:"m3", fixed:{price:100, source:"FAO 2024 ~$100/m³"}, annual:2.0e9, src:"FAO 2024"},
 
-  {key:"iron",   cat:"结构与制造", name:"62%铁矿石", unit:"dmt", cents:false, yahoo:"TIO=F", annual:2.5e9,  src:"USGS 2024"},
+  // === 结构与制造(方案B:只留下游可交易成品,不收矿石;补砂石/磷矿/钾肥)===
   {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     unit:"t",    cents:false, yahoo:"HRC=F", annual:1.9e9,  src:"Worldsteel 2024"},
   {key:"alum",   cat:"结构与制造", name:"铝",           unit:"t",    cents:false, yahoo:"ALI=F", annual:7.0e7,  src:"USGS 2024"},
-  {key:"copper", cat:"结构与制造", name:"铜",           unit:"lb",   cents:false, yahoo:"HG=F", annual:5.5e10, src:"USGS 2024"},
+  {key:"copper", cat:"结构与制造", name:"铜",           unit:"lb",   cents:false, yahoo:"HG=F",  annual:5.5e10, src:"USGS 2024"},
   {key:"zinc",   cat:"结构与制造", name:"锌",           unit:"t",    cents:false, yahoo:"ZNC=F", annual:1.3e7,  src:"USGS 2024"},
   {key:"nickel", cat:"结构与制造", name:"镍",           unit:"t",    cents:false, yahoo:"MNI=F", annual:3.5e6,  src:"USGS 2024"},
   {key:"cement", cat:"结构与制造", name:"水泥",         unit:"t",    cents:false, yahoo:"TIO=F", annual:4.1e9,  src:"USGS 2024"},
+  {key:"sand",   cat:"结构与制造", name:"砂石骨料 *fixed", unit:"t", fixed:{price:10, source:"UNEP ~$10/t 骨料均价"}, annual:4.5e10, src:"UNEP 2024"},
+  {key:"phos",   cat:"结构与制造", name:"磷矿 *fixed",   unit:"t",    fixed:{price:80, source:"USGS ~$80/t 磷矿"}, annual:2.3e8,  src:"USGS 2024"},
+  {key:"potash", cat:"结构与制造", name:"钾肥 *fixed",   unit:"t",    fixed:{price:300, source:"USGS ~$300/t K₂O"}, annual:4.5e7,  src:"USGS 2024"},
 
+  // === 技术催化(按真实年消费权,不按战略叙事抬权)===
   {key:"gold",   cat:"技术催化", name:"工业黄金",   unit:"oz", cents:false, metal:"XAU", annual:1.0e7,  src:"Metals Focus 2024"},
-  {key:"silver", cat:"技术催化", name:"工业白银", unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
+  {key:"silver", cat:"技术催化", name:"工业白银",   unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
   {key:"plat",   cat:"技术催化", name:"铂",         unit:"oz", cents:false, metal:"XPT", annual:7.0e6,  src:"Johnson Matthey 2024"},
   {key:"pall",   cat:"技术催化", name:"钯",         unit:"oz", cents:false, metal:"XPD", annual:1.0e7,  src:"Johnson Matthey 2024"},
+  {key:"lithium",cat:"技术催化", name:"锂 *fixed",   unit:"t",    fixed:{price:12000, source:"USGS ~$12000/t LCE"}, annual:1.8e5,  src:"USGS 2024"},
+  {key:"ree",    cat:"技术催化", name:"稀土 *fixed", unit:"t",    fixed:{price:8000, source:"USGS ~$8000/t REO"}, annual:3.5e5,  src:"USGS 2024"},
 ];
 // 品种英文名
 const NAME_EN = {
@@ -247,7 +254,7 @@ const UCN = {t:"吨",bbl:"桶",MMBtu:"百万英热单位",gal:"加仑",bu:"蒲�
 function ucn(u){ return UCN[u] || u; }
 // SI 单位转换：原单位 → {factor(原→SI数值乘子), si: SI单位中文}
 // 蒲式耳(bu)为容量/农产品近似，按 ~25 kg/bu 估算
-const SI = {t:{f:1000,u:"千克"},dmt:{f:1000,u:"千克"},bbl:{f:0.158987,u:"立方米"},MMBtu:{f:1.055056,u:"吉焦"},gal:{f:3.78541,u:"升"},bu:{f:25,u:"千克"},lb:{f:0.453592,u:"千克"},oz:{f:0.0283495,u:"千克"}};
+const SI = {t:{f:1000,u:"千克"},dmt:{f:1000,u:"千克"},bbl:{f:0.158987,u:"立方米"},MMBtu:{f:1.055056,u:"吉焦"},gal:{f:3.78541,u:"升"},bu:{f:25,u:"千克"},lb:{f:0.453592,u:"千克"},oz:{f:0.0283495,u:"千克"},m3:{f:1,u:"立方米"}};
 // 年耗来源机构 → 细粒度数据页
 const SRC_URL = {
   "IEA": "https://www.iea.org/",
@@ -262,7 +269,10 @@ const SRC_URL = {
   "USGS": "https://www.usgs.gov/centers/national-minerals-information-center",
   "Worldsteel": "https://worldsteel.org/",
   "Silver Inst.": "https://www.silverinstitute.org/",
-  "Johnson Matthey": "https://www.platinum.matthey.com/"
+  "Johnson Matthey": "https://www.platinum.matthey.com/",
+  "FAO": "https://www.fao.org/forestry/statistics/en/",
+  "UNEP": "https://www.unep.org/resources/report/sand-and-sustainability",
+  "Metals Focus": "https://www.metalsfocus.com/",
 };
 // 把 src 文本(如 "IEA 2024")包成可点击链接
 function srcLink(src){
@@ -290,7 +300,6 @@ const TICKERS = [
   {key:"wti",    label:"WTI / bbl"},
   {key:"corn",   label:"玉米 / bu"},
   {key:"copper", label:"铜 / t"},
-  {key:"iron",   label:"铁矿石 / dmt"},
   {key:"brent",  label:"布伦特 / bbl"},
   {key:"ng",     label:"天然气 / MMBtu"},
   {key:"silver", label:"白银 / oz"},
@@ -448,7 +457,7 @@ function render(){
   if(gdpMeta) gdpMeta.innerHTML = window.__gdpYear ? `<a href="https://data.worldbank.org/indicator/NY.GDP.MKTP.CD" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px dotted var(--accent)">${T("dataYear")} ${window.__gdpYear} · World Bank</a>` : "";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
-    chEl.textContent = T("allReady");
+    chEl.textContent = T("allReady").replace("26", BASKET.length);
     chEl.className = "change";
   } else {
     chEl.textContent = T("missing")+" "+g.missing.length+" 项："+g.missing.map(itemName).join("、");
