@@ -84,7 +84,7 @@ button:disabled{opacity:.55;cursor:default}
   <div>
     <div class="kicker">GRRB · Global Real Resource Basket</div>
     <h1 class="title">全球实际资源篮子</h1>
-    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>篮子数量 = 全球实际年消耗量 ÷ 全球人口（人均）</strong>。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
+    <p class="sub">一个<strong>固定数量</strong>的全球实物资源组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>（年耗为权威年度统计值，人口实时抓取）。覆盖动力能源、生存生物质、结构制造、技术催化四类。不含股票、债券、货币或比特币——只计入维持全球运作所消耗、能被开采/种植/冶炼/投入生产的实物。</p>
   </div>
   <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
 </header>
@@ -95,8 +95,12 @@ button:disabled{opacity:.55;cursor:default}
     <div class="big" id="grrb">$—</div>
     <div id="grrbChange" class="change">正在聚合行情</div>
     <div class="meta" id="grrbMeta"></div>
-    <div class="label" style="margin-top:18px">当前全球总人口</div>
+    <div class="label" style="margin-top:18px">当前全球总人口 <span class="tag" style="background:rgba(126,176,212,.14);color:var(--accent)">实时</span></div>
     <div class="big" id="pop" style="font-size:32px">—</div>
+    <div class="meta" id="popMeta"></div>
+    <div class="label" style="margin-top:18px">当前全球年 GDP <span class="tag" style="background:rgba(201,184,150,.14);color:var(--metal)">权威年度值</span></div>
+    <div class="big" id="gdp" style="font-size:32px">—</div>
+    <div class="meta" id="gdpMeta"></div>
     <canvas id="chart" width="1000" height="220" style="width:100%;height:220px;background:#091522;border-radius:10px;margin-top:16px"></canvas>
   </section>
 
@@ -114,7 +118,7 @@ button:disabled{opacity:.55;cursor:default}
     <div class="label">完整实物篮子 · 25 项</div>
     <div class="desk">
       <table>
-        <thead><tr><th>代表资源</th><th>固定数量</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
+        <thead><tr><th>代表资源</th><th>人均数量</th><th>年耗(权威)</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
         <tbody id="basketBody"></tbody>
       </table>
     </div>
@@ -144,39 +148,42 @@ const LS_HIST = "grrb.hist.v3";
 // metal="XAG"  => 走 Gold-API 贵金属源
 // =====================================================================
 const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
-const POP = 8100000000; // 当前全球总人口（约 81 亿）
-const PPF = 100000000;  // 原篮子分母为亿分之一；人均 = 年耗 / POP
-const QSCALE = PPF / POP; // 旧 qty(÷1e8) → 人均(÷POP) 的缩放
+let POP_LIVE = null; // 运行时由 Worldometer 填充（实时）
+const POP_FALLBACK = 8300000000; // 兜底：World Bank/UN 2026 约 83 亿
+// annual = 全球年消耗量（合约报价单位）；src = 权威来源年份
+// qty 自动 = annual / 全球人口（人均）
 const BASKET = [
-  {key:"coal",   cat:"动力与能源", name:"煤炭",         qty:80*QSCALE,     unit:"t",     cents:false, yahoo:"MTF=F"},
-  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     qty:4*QSCALE,      unit:"bbl",   cents:false, yahoo:"CL=F"},
-  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   qty:3*QSCALE,      unit:"bbl",   cents:false, yahoo:"BZ=F"},
-  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", qty:40*QSCALE,     unit:"MMBtu", cents:false, yahoo:"NG=F"},
-  {key:"ho",     cat:"动力与能源", name:"取暖油",       qty:0.5*QSCALE,    unit:"gal",   cents:false, yahoo:"HO=F"},
-  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    qty:0.5*QSCALE,    unit:"gal",   cents:false, yahoo:"RB=F"},
-  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      qty:0.006*QSCALE,  unit:"lb",    cents:false, yahoo:"UX=F"},
+  {key:"coal",   cat:"动力与能源", name:"煤炭",         unit:"t",     cents:false, yahoo:"MTF=F", annual:8.0e9,  src:"IEA 2024"},
+  {key:"wti",    cat:"动力与能源", name:"WTI 原油",     unit:"bbl",   cents:false, yahoo:"CL=F",  annual:4.0e9,  src:"BP Stat Rev 2024"},
+  {key:"brent",  cat:"动力与能源", name:"布伦特原油",   unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:3.8e9,  src:"BP Stat Rev 2024"},
+  {key:"ng",     cat:"动力与能源", name:"亨利港天然气", unit:"MMBtu", cents:false, yahoo:"NG=F",  annual:4.0e13, src:"IEA 2024"},
+  {key:"ho",     cat:"动力与能源", name:"取暖油",       unit:"gal",   cents:false, yahoo:"HO=F",  annual:3.0e10, src:"EIA 2024"},
+  {key:"rbob",   cat:"动力与能源", name:"RBOB 汽油",    unit:"gal",   cents:false, yahoo:"RB=F",  annual:4.0e10, src:"EIA 2024"},
+  {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      unit:"lb",    cents:false, yahoo:"UX=F",  annual:1.3e8,  src:"World Nuclear 2024"},
 
-  {key:"corn",   cat:"生存与生物质", name:"玉米",  qty:12*QSCALE,    unit:"bu", cents:true, yahoo:"ZC=F"},
-  {key:"wheat",  cat:"生存与生物质", name:"小麦",  qty:7.8*QSCALE,   unit:"bu", cents:true, yahoo:"ZW=F"},
-  {key:"rice",   cat:"生存与生物质", name:"稻米",  qty:5.2*QSCALE,   unit:"bu", cents:true, yahoo:"ZR=F"},
-  {key:"soy",    cat:"生存与生物质", name:"大豆",  qty:3.7*QSCALE,   unit:"bu", cents:true, yahoo:"ZS=F"},
-  {key:"sugar",  cat:"生存与生物质", name:"原糖",  qty:18*QSCALE,    unit:"lb", cents:true, yahoo:"SB=F"},
-  {key:"cotton", cat:"生存与生物质", name:"棉花",  qty:2.5*QSCALE,   unit:"lb", cents:true, yahoo:"CT=F"},
-  {key:"coffee", cat:"生存与生物质", name:"咖啡",  qty:1*QSCALE,     unit:"lb", cents:true, yahoo:"KC=F"},
-  {key:"cocoa",  cat:"生存与生物质", name:"可可",  qty:0.5*QSCALE,   unit:"lb", cents:true, yahoo:"CC=F"},
+  {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e9,  src:"USDA 2024/25"},
+  {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e9,  src:"USDA 2024/25"},
+  {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e9,  src:"USDA 2024/25"},
+  {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e9,  src:"USDA 2024/25"},
+  {key:"sugar",  cat:"生存与生物质", name:"原糖",  unit:"lb", cents:true, yahoo:"SB=F", annual:4.0e12, src:"ISO 2024"},
+  {key:"cotton", cat:"生存与生物质", name:"棉花",  unit:"lb", cents:true, yahoo:"CT=F", annual:5.5e11, src:"ICAC 2024"},
+  {key:"coffee", cat:"生存与生物质", name:"咖啡",  unit:"lb", cents:true, yahoo:"KC=F", annual:2.2e11, src:"ICO 2024"},
+  {key:"cocoa",  cat:"生存与生物质", name:"可可",  unit:"lb", cents:true, yahoo:"CC=F", annual:1.1e11, src:"ICCO 2024"},
 
-  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", qty:25*QSCALE,     unit:"dmt", cents:false, yahoo:"TIO=F"},
-  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     qty:19*QSCALE,     unit:"t",    cents:false, yahoo:"HRC=F"},
-  {key:"alum",   cat:"结构与制造", name:"铝",           qty:0.68*QSCALE,   unit:"t",    cents:false, yahoo:"ALI=F"},
-  {key:"copper", cat:"结构与制造", name:"铜",           qty:551.155*QSCALE,unit:"lb",   cents:false, yahoo:"HG=F"},
-  {key:"zinc",   cat:"结构与制造", name:"锌",           qty:0.13*QSCALE,   unit:"t",    cents:false, yahoo:"ZNC=F"},
-  {key:"nickel", cat:"结构与制造", name:"镍",           qty:0.03*QSCALE,   unit:"t",    cents:false, yahoo:"MNI=F"},
-  {key:"cement", cat:"结构与制造", name:"水泥",         qty:40*QSCALE,     unit:"t",    cents:false, yahoo:"TIO=F"},
+  {key:"iron",   cat:"结构与制造", name:"铁矿石 62%Fe", unit:"dmt", cents:false, yahoo:"TIO=F", annual:2.5e9,  src:"USGS 2024"},
+  {key:"hrc",    cat:"结构与制造", name:"热轧卷钢",     unit:"t",    cents:false, yahoo:"HRC=F", annual:1.9e9,  src:"Worldsteel 2024"},
+  {key:"alum",   cat:"结构与制造", name:"铝",           unit:"t",    cents:false, yahoo:"ALI=F", annual:7.0e7,  src:"USGS 2024"},
+  {key:"copper", cat:"结构与制造", name:"铜",           unit:"lb",   cents:false, yahoo:"HG=F", annual:5.5e12, src:"USGS 2024"},
+  {key:"zinc",   cat:"结构与制造", name:"锌",           unit:"t",    cents:false, yahoo:"ZNC=F", annual:1.3e7,  src:"USGS 2024"},
+  {key:"nickel", cat:"结构与制造", name:"镍",           unit:"t",    cents:false, yahoo:"MNI=F", annual:3.5e6,  src:"USGS 2024"},
+  {key:"cement", cat:"结构与制造", name:"水泥",         unit:"t",    cents:false, yahoo:"TIO=F", annual:4.1e9,  src:"USGS 2024"},
 
-  {key:"silver", cat:"技术催化", name:"白银(工业)", qty:0.0013*QSCALE, unit:"oz", cents:false, metal:"XAG"},
-  {key:"pall",   cat:"技术催化", name:"钯",         qty:0.00013*QSCALE,unit:"oz", cents:false, metal:"XPD"},
-  {key:"plat",   cat:"技术催化", name:"铂",         qty:0.00009*QSCALE,unit:"oz", cents:false, metal:"XPT"},
+  {key:"silver", cat:"技术催化", name:"白银(工业)", unit:"oz", cents:false, metal:"XAG", annual:8.2e8,  src:"Silver Inst. 2024"},
+  {key:"pall",   cat:"技术催化", name:"钯",         unit:"oz", cents:false, metal:"XPD", annual:1.0e7,  src:"Johnson Matthey 2024"},
+  {key:"plat",   cat:"技术催化", name:"铂",         unit:"oz", cents:false, metal:"XPT", annual:7.0e6,  src:"Johnson Matthey 2024"},
 ];
+// 人均数量 = 年耗 / 人口（POP 运行时取实时，兜底 POP_FALLBACK）
+function qtyOf(item){ return item.annual / (POP_LIVE || POP_FALLBACK); }
 
 const TICKERS = [
   {key:"coal",   label:"煤炭 / t"},
@@ -216,7 +223,7 @@ function hk(ts){
 }
 function lineVal(item, px){
   if(px==null || !Number.isFinite(px)) return null;
-  return px * item.qty; // qty 已按合约单位，cents 在取价时处理
+  return px * qtyOf(item); // qty 已按合约单位(年耗/人口),cents 在取价时处理
 }
 async function fetchJson(url, timeout=14000){
   const ctrl = new AbortController();
@@ -266,6 +273,7 @@ async function fetchItem(item){
 
 async function loadAll(){
   document.getElementById("status").textContent = "拉取中";
+  await fetchPopGdp(); // 实时人口 + 权威 GDP（独立于行情）
   const jobs = BASKET.map(async item=>{
     const hit = await fetchItem(item);
     if(hit && hit.price!=null && Number.isFinite(hit.price)){
@@ -293,7 +301,19 @@ function compute(){
     else { total+=v; ok++; cats[item.cat]+=v; }
     rows.push({item, q, v});
   }
-  return {total, globalTotal: total*POP, complete: missing.length===0, missing, rows, cats, ok};
+  return {total, pop: POP_LIVE || POP_FALLBACK, globalTotal: total*(POP_LIVE||POP_FALLBACK), complete: missing.length===0, missing, rows, cats, ok};
+}
+
+// ---------- 实时全球人口 / 权威 GDP（经 CF Worker 代理）----------
+async function fetchPopGdp(){
+  try{
+    const j = await fetchJson(PROXY_BASE+"/pop");
+    if(j && j.pop){ POP_LIVE = j.pop; window.__popMeta = j.source; }
+  }catch(e){ window.__popMeta = "实时获取失败,用兜底 83 亿"; }
+  try{
+    const j = await fetchJson(PROXY_BASE+"/gdp");
+    if(j && j.gdp){ window.__gdp = j.gdp; window.__gdpMeta = j.source; }
+  }catch(e){ window.__gdpMeta = "获取失败"; }
 }
 
 function render(){
@@ -301,7 +321,13 @@ function render(){
   const el = document.getElementById("grrb");
   el.textContent = g.complete ? money(g.globalTotal,0) : money(g.globalTotal,0)+"*";
   const popEl = document.getElementById("pop");
-  popEl.textContent = (POP/1e9).toFixed(2)+" 亿";
+  popEl.textContent = ((POP_LIVE||POP_FALLBACK)/1e9).toFixed(2)+" 亿";
+  const popMeta = document.getElementById("popMeta");
+  if(popMeta) popMeta.textContent = (POP_LIVE ? "Worldometers 实时" : "兜底 83 亿") + (window.__popMeta?(" · "+window.__popMeta):"");
+  const gdpEl = document.getElementById("gdp");
+  if(gdpEl) gdpEl.textContent = window.__gdp ? money(window.__gdp,0) : "—";
+  const gdpMeta = document.getElementById("gdpMeta");
+  if(gdpMeta) gdpMeta.textContent = window.__gdpMeta || "拉取中";
   const chEl = document.getElementById("grrbChange");
   if(g.complete){
     chEl.textContent = "全部 "+BASKET.length+" 项实物组件已到位";
@@ -348,14 +374,15 @@ function render(){
   let lastCat="", body="";
   for(const row of g.rows){
     if(row.item.cat!==lastCat){
-      body += `<tr class="cat-h"><td colspan="5" class="${catClass(row.item.cat)}">${row.item.cat}</td></tr>`;
+      body += `<tr class="cat-h"><td colspan="6" class="${catClass(row.item.cat)}">${row.item.cat}</td></tr>`;
       lastCat = row.item.cat;
     }
     const share = g.total && row.v!=null ? (row.v/g.total*100).toFixed(1)+"%" : "—";
     const proxyNote = row.item.proxy ? ` <span class="proxy">*proxy</span>` : "";
     body += `<tr>
       <td>${row.item.name}${proxyNote}</td>
-      <td>${row.item.qty.toLocaleString()} ${row.item.unit}</td>
+      <td>${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${row.item.unit}</td>
+      <td>${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${row.item.unit}<br><span class="meta">${row.item.src}</span></td>
       <td class="num">${row.q.price==null?"—":money(row.q.price, row.q.price<2?4:2)}</td>
       <td class="num">${row.v==null?"—":money(row.v,0)}</td>
       <td class="num">${share}</td>
@@ -370,7 +397,7 @@ function render(){
       stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${row.item.cat}</div>`;
       lastCat = row.item.cat;
     }
-    stack += `<div class="row"><div class="l">${row.item.name}${row.item.proxy?' <span class="proxy">*proxy</span>':''}<div class="sub">${row.item.qty.toLocaleString()} ${row.item.unit}</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    stack += `<div class="row"><div class="l">${row.item.name}<div class="sub">人均 ${qtyOf(row.item).toLocaleString(undefined,{maximumFractionDigits:4})} ${row.item.unit} · 年耗 ${row.item.annual.toLocaleString(undefined,{maximumFractionDigits:2})} ${row.item.unit} (${row.item.src})</div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
