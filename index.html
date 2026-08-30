@@ -131,7 +131,7 @@ button:disabled{opacity:.55;cursor:default}
   </section>
 
   <section class="card">
-    <div class="label">完整实物篮子 · 26 项</div>
+    <div class="label" style="font-size:18px;font-weight:600">完整实物篮子 · 26 项</div>
     <div class="desk">
       <table>
         <thead><tr><th>代表资源</th><th>人均数量</th><th>年耗</th><th>单价</th><th class="num">美元价值</th><th>占比</th></tr></thead>
@@ -394,6 +394,19 @@ function render(){
     chEl.textContent = "缺少 "+g.missing.length+" 项："+g.missing.join("、");
     chEl.className = "change down";
   }
+  // 跟上一小时的 ±%
+  const cur = g.pop ? g.globalTotal/g.pop : null;
+  if(cur && history.length){
+    const cutoff = Date.now() - 60*60*1000;
+    let prev = null;
+    for(let i=history.length-1; i>=0; i--){ if(history[i].t <= cutoff){ prev = history[i]; break; } }
+    if(!prev) prev = history[0];
+    if(prev && prev.v){
+      const d = (cur-prev.v)/prev.v*100;
+      chEl.textContent += "  ·  "+pct(d)+" 跟上一小时";
+      chEl.className = "change"+(d<0?" down":"");
+    }
+  }
   // 历史快照（记录拉取时间，用于"上一次拉取成功"显示）
   const last = history[history.length-1];
   const curPerCap = g.pop ? g.globalTotal/g.pop : null;
@@ -404,12 +417,13 @@ function render(){
   }
   const gMeta = document.getElementById("grrbMeta");
   const newest = history[history.length-1];
-  if(gMeta) gMeta.textContent = "上一次拉取成功 "+utc(newest ? newest.t : Date.now());
+  if(gMeta) gMeta.textContent = "更新于 "+utc(newest ? newest.t : Date.now());
   drawChart();
 
-  // 类别条形图（自然涌现的权重）
+  // 类别条形图（按金额降序）
   const maxCat = Math.max(1, ...Object.values(g.cats));
-  document.getElementById("catBars").innerHTML = CAT_ORDER.map(name=>{
+  const catSorted = CAT_ORDER.slice().sort((a,b)=>(g.cats[b]||0)-(g.cats[a]||0));
+  document.getElementById("catBars").innerHTML = catSorted.map(name=>{
     const v = g.cats[name]||0;
     const share = g.total ? v/g.total*100 : 0;
     return `<div>
