@@ -403,7 +403,7 @@ function render(){
     if(!prev) prev = history[0];
     if(prev && prev.v){
       const d = (cur-prev.v)/prev.v*100;
-      chEl.textContent += "  ·  "+pct(d)+" 跟上一小时";
+      chEl.textContent += "  ·  "+pct(d);
       chEl.className = "change"+(d<0?" down":"");
     }
   }
