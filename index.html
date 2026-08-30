@@ -270,6 +270,9 @@ function pct(x){
 function hk(ts){
   return new Date(ts).toLocaleString("zh-CN",{timeZone:"Asia/Hong_Kong",hour12:false});
 }
+function utc(ts){
+  return new Date(ts).toISOString().replace("T"," ").slice(0,19)+" UTC";
+}
 function lineVal(item, px){
   if(px==null || !Number.isFinite(px)) return null;
   return px * qtyOf(item); // qty 已按合约单位(年耗/人口),cents 在取价时处理
@@ -321,7 +324,7 @@ async function fetchItem(item){
 }
 
 async function loadAll(){
-  document.getElementById("status").textContent = "拉取中";
+  document.getElementById("status").textContent = "Live";
   await fetchPopGdp(); // 实时人口 + 权威 GDP（独立于行情）
   const jobs = BASKET.map(async item=>{
     const hit = await fetchItem(item);
@@ -397,7 +400,7 @@ function render(){
     const cur = g.pop ? g.globalTotal/g.pop : null;
     if(prev && prev.v && cur){
       const d = (cur-prev.v)/prev.v*100;
-      chEl.textContent += "  ·  "+pct(d)+" 相对上次快照";
+      chEl.textContent += "  ·  "+pct(d)+" 相对 "+utc(prev.t);
       chEl.className = "change"+(d<0?" down":"");
     }
   }
@@ -408,6 +411,9 @@ function render(){
     if(history.length>80) history.shift();
     try{ localStorage.setItem(LS_HIST, JSON.stringify(history)); }catch{}
   }
+  const gMeta = document.getElementById("grrbMeta");
+  const newest = history[history.length-1];
+  if(gMeta) gMeta.textContent = "上一次拉取成功 "+utc(newest ? newest.t : Date.now());
   drawChart();
 
   // 类别条形图（自然涌现的权重）
