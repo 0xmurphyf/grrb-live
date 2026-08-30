@@ -394,16 +394,7 @@ function render(){
     chEl.textContent = "缺少 "+g.missing.length+" 项："+g.missing.join("、");
     chEl.className = "change down";
   }
-  // 历史快照（人均口径，与主卡一致）
-  if(history.length){
-    const prev = history[history.length-1];
-    const cur = g.pop ? g.globalTotal/g.pop : null;
-    if(prev && prev.v && cur){
-      const d = (cur-prev.v)/prev.v*100;
-      chEl.textContent += "  ·  "+pct(d)+" 相对 "+utc(prev.t);
-      chEl.className = "change"+(d<0?" down":"");
-    }
-  }
+  // 历史快照（记录拉取时间，用于"上一次拉取成功"显示）
   const last = history[history.length-1];
   const curPerCap = g.pop ? g.globalTotal/g.pop : null;
   if(curPerCap && (!last || Math.abs(last.v-curPerCap)>0.005)){
