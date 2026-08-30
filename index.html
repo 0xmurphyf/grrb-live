@@ -38,7 +38,8 @@ table{width:100%;border-collapse:collapse}
 th,td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
 th{color:var(--faint);font-weight:500}
 td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
-.cat-h td{padding-top:16px;color:var(--accent);font-size:12px;letter-spacing:.08em;font-weight:600;border-bottom:none}
+.cat-h td{padding-top:16px;color:var(--accent);font-size:15px;letter-spacing:.06em;font-weight:700;border-bottom:none}
+.catname{font-size:15px;font-weight:700}
 .cat-energy{color:#e0a04a;background:rgba(224,160,74,.14)}
 .cat-bio{color:#5dbe8a;background:rgba(93,190,138,.14)}
 .cat-mfg{color:#7eb0d4;background:rgba(126,176,212,.14)}
@@ -52,7 +53,7 @@ button:disabled{opacity:.55;cursor:default}
 .fine{color:var(--faint);font-size:12px;line-height:1.7;margin-top:14px}
 .bars{display:grid;gap:12px;margin-top:16px}
 .bar-top{display:flex;justify-content:space-between;gap:12px;font-size:12px}
-.bar-top .n{color:var(--mute)}
+.bar-top .n{color:var(--mute);font-size:15px;font-weight:700}
 .bar-top .v{font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--faint)}
 .track{height:8px;background:var(--elev);border-radius:99px;overflow:hidden;margin-top:6px}
 .fill{height:100%;border-radius:99px}
@@ -474,7 +475,7 @@ function render(){
   lastCat=""; let stack="";
   for(const row of sortedRows){
     if(row.item.cat!==lastCat){
-      stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${row.item.cat}</div>`;
+      stack += `<div class="meta catname" style="margin-top:14px">${row.item.cat}</div>`;
       lastCat = row.item.cat;
     }
     const cq = convQty(row.item.unit, qtyOf(row.item));
