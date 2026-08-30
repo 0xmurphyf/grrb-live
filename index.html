@@ -293,17 +293,18 @@ async function loadAll(){
 
 function compute(){
   let total=0, ok=0, missing=[];
+  let grandTotal=0; // 全球总消耗量 = Σ(单价 × 年耗)，不除人口
   const rows=[];
   const cats={};
   for(const name of CAT_ORDER) cats[name]=0;
   for(const item of BASKET){
     const q = quotes[item.key] || {};
-    const v = lineVal(item, q.price);
+    const v = lineVal(item, q.price); // 人均价值 = price × annual / POP
     if(v==null) missing.push(item.name);
-    else { total+=v; ok++; cats[item.cat]+=v; }
+    else { total+=v; ok++; cats[item.cat]+=v; grandTotal += (q.price!=null? q.price*item.annual : 0); }
     rows.push({item, q, v});
   }
-  return {total, pop: POP_LIVE || POP_FALLBACK, globalTotal: total*(POP_LIVE||POP_FALLBACK), complete: missing.length===0, missing, rows, cats, ok};
+  return {total, pop: POP_LIVE || POP_FALLBACK, globalTotal: grandTotal, complete: missing.length===0, missing, rows, cats, ok};
 }
 
 // ---------- 实时全球人口（经 CF Worker 代理）/ 权威 GDP（World Bank 直连，自带 CORS）----------
