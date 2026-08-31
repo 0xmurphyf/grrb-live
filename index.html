@@ -12,10 +12,9 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1120px;margin:auto;padding:28px 18px 72px}
-#langSwitch{position:fixed;top:14px;right:18px;z-index:50;display:flex;gap:4px;background:var(--elev);border:1px solid var(--line);border-radius:10px;padding:4px}
-.ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:13px;padding:6px 12px;cursor:pointer;border-radius:7px}
+#langSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px}
+.ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
 .ls-btn.active{background:var(--accent);color:#071018;font-weight:600}
-@media(max-width:900px){#langSwitch{top:10px;right:10px}}
 .top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:26px}
 .kicker{font-size:11px;letter-spacing:.22em;color:var(--accent);font-weight:600;text-transform:uppercase}
 .title{font-size:36px;font-weight:650;margin:8px 0 0;letter-spacing:-.03em;text-wrap:balance}
@@ -99,17 +98,17 @@ button:disabled{opacity:.55;cursor:default}
 </head>
 <body>
 <div class="wrap">
-<div id="langSwitch">
-  <button type="button" data-lang="zh" class="ls-btn active">中</button>
-  <button type="button" data-lang="en" class="ls-btn">EN</button>
-</div>
 <header class="top">
   <div>
     <h1 class="title" data-i18n="title">全球实际资源篮子</h1>
     <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的<strong>初级可交易原料</strong>组合，按当前美元市价加总。<strong>人均数量 = 全球实际年消耗量 ÷ 全球人口</strong>。覆盖燃料采出、生存生物质(全口径:食用+饲用+种子+工业)、结构制造(仅下游可交易成品,不收矿石)、技术催化四类。已删电力/汽油/柴油/一次能源总计等重复计价项;砂石骨料是物质流第一大头(按吨计市值不大),单独披露。不含股票、债券、货币、比特币或肉类(避免与饲料粮重叠)。</p>
   </div>
-  <div style="display:flex;flex-direction:row;align-items:center;gap:12px">
+  <div style="display:flex;flex-direction:row;align-items:center;gap:10px">
     <div class="live"><span class="dot"></span><span id="status">等待数据</span></div>
+    <div id="langSwitch">
+      <button type="button" data-lang="zh" class="ls-btn active">中</button>
+      <button type="button" data-lang="en" class="ls-btn">EN</button>
+    </div>
   </div>
 </header>
 
