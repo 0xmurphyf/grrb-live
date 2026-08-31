@@ -99,7 +99,12 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
     <div class="cards" id="tickers"></div>
   </section>
 
-  <section class="card">
+    <section class="card">
+    <div class="label" data-i18n="catConst">类别构成（COICOP 全球支出份额）</div>
+    <div class="bars" id="catBars"></div>
+  </section>
+
+<section class="card">
     <div class="label"><span data-i18n="full">完整消费篮子</span> · <span id="itemCount">0</span> <span data-i18n="itemCount">类</span></div>
     <div class="desk">
       <table>
@@ -157,7 +162,7 @@ const I18N = {
     full:"完整消费篮子",
     itemCount:"类",
     colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
-    toGRRB:"→ GRRB(原料侧实物篮子)", toGRRB:"→ GRRB(原料侧实物篮子)",
+    toGRRB:"→ GRRB(原料侧实物篮子)", catConst:"类别构成（COICOP 全球支出份额）", toGRRB:"→ GRRB(原料侧实物篮子)",
     globalTotal:"全球总消费",
     updated:"数据年",
     fixedPrice:"年度数据",
@@ -173,7 +178,7 @@ const I18N = {
     full:"Full consumer basket",
     itemCount:"cats",
     colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
-    toGRRB:"→ GRRB (input-side real basket)", toGRRB:"→ GRRB (input-side real basket)",
+    toGRRB:"→ GRRB (input-side real basket)", catConst:"Category mix (COICOP global expenditure shares)", toGRRB:"→ GRRB (input-side real basket)",
     globalTotal:"Global consumption",
     updated:"Data year",
     fixedPrice:"Annual data",
@@ -209,6 +214,13 @@ function render(){
     document.getElementById("formulaBox").textContent = T("formulaWB");
 
     const catsSorted = [...CAT_ORDER].sort((a,b)=> (WB_PERCAP*CAT_SHARE[b]) - (WB_PERCAP*CAT_SHARE[a]));
+    const maxCat = Math.max(...rows.map(r=>r.perCap));
+    document.getElementById("catBars").innerHTML = catsSorted.map(c=>{
+      const r = rows.find(x=>x.cat===c);
+      return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</span></div>
+        <div class="track"><div class="fill" style="width:${(r.perCap/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
+    }).join("");
+
     document.getElementById("tickers").innerHTML = catsSorted.slice(0,4).map(c=>{
       const r = rows.find(x=>x.cat===c);
       return `<div class="mini"><div class="k">${catName(c)}</div><div class="p">${money(r.perCap)}</div><div class="s">${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
