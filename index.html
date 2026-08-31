@@ -549,7 +549,7 @@ function render(){
     const ca = convQty(row.item.unit, row.item.annual);
     const cp = convPrice(row.item.unit, row.q.price);
     const ledCls = row.item.proxy ? "led warn" : (row.q.price!=null ? "led ok" : "led fail");
-    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · ${T("thAnnual")} ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${cq.u} (LANG==="en" && row.item.ensrc ? row.item.ensrc : row.item.src)</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · ${T("thAnnual")} ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${cq.u} · ${srcLink(LANG==="en" && row.item.ensrc ? row.item.ensrc : row.item.src)}</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
