@@ -267,25 +267,26 @@ function render(){
     document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(WB_GLOBAL):moneyT(WB_GLOBAL));
     document.getElementById("formulaBox").textContent = T("formulaWB");
 
+    const catsSorted = [...CAT_ORDER].sort((a,b)=> (WB_PERCAP*CAT_SHARE[b]) - (WB_PERCAP*CAT_SHARE[a]));
     const maxCat = Math.max(...rows.map(r=>r.perCap));
-    document.getElementById("catBars").innerHTML = CAT_ORDER.map(c=>{
+    document.getElementById("catBars").innerHTML = catsSorted.map(c=>{
       const r = rows.find(x=>x.cat===c);
       return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</span></div>
         <div class="track"><div class="fill" style="width:${(r.perCap/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
     }).join("");
 
-    document.getElementById("tickers").innerHTML = CAT_ORDER.slice(0,4).map(c=>{
+    document.getElementById("tickers").innerHTML = catsSorted.slice(0,4).map(c=>{
       const r = rows.find(x=>x.cat===c);
       return `<div class="mini"><div class="k">${catName(c)}</div><div class="p">${money(r.perCap)}</div><div class="s">${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
     }).join("");
 
     let body="";
-    for(const c of CAT_ORDER){
+    for(const c of catsSorted){
       const r = rows.find(x=>x.cat===c);
       body += `<tr><td>${catName(c)}</td><td class="num">${(CAT_SHARE[c]*100).toFixed(0)}%</td><td class="num">${money(r.perCap)}</td><td class="num">${LANG==="en"?moneyT_en(r.global):moneyT(r.global)}</td></tr>`;
     }
     document.getElementById("basketBody").innerHTML = body;
-    document.getElementById("basketStack").innerHTML = CAT_ORDER.map(c=>{
+    document.getElementById("basketStack").innerHTML = catsSorted.map(c=>{
       const r = rows.find(x=>x.cat===c);
       return `<div class="row"><div class="l">${catName(c)}</div><div class="num">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
     }).join("");
