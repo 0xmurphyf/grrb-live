@@ -63,6 +63,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
   .row .l{font-size:13px}
   .row .sub{font-size:12px;color:var(--mute);margin:0}
 }
+.nav{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px}
+.nav a{color:var(--accent);text-decoration:none}
+.nav a:hover{text-decoration:underline}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -115,7 +118,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
       </table>
     </div>
     <div class="stack" id="basketStack"></div>
-    <div class="formula">GRCB = Σ 人均年支出(USD)  ·  全球总 = GRCB × 全球人口(~8.3B)</div>
+    <div class="formula" data-i18n="formula">GRCB = Σ per-capita spend (USD)  ·  Global total = GRCB × global population (~8.3B)</div>
   </section>
 </div>
 
@@ -126,6 +129,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
   · 订阅/电子零售价：企业官网标价（Netflix / Spotify / Apple 等）取主流档。<br>
   · 价格为<strong>固定参考价</strong>，非实时行情；建议季度手动复核更新。最后更新 2026-Q3。
 </p>
+<div class="nav"><a href="index.html" data-i18n="navGRRB">← GRRB · 全球实际资源篮子（原料侧）</a></div>
 </div>
 
 <script>
@@ -147,7 +151,9 @@ const I18N = {
     updated:"更新于",
     fixedPrice:"固定参考价",
     sources:'<b>数据来源：</b><br>· 居住/食物/出行/服务：Numbeo 全球生活成本中位（人口加权近似），numbeo.com。<br>· 居民电价/通讯：World Bank、OECD 公开数据。<br>· 订阅/电子零售价：企业官网标价（Netflix / Spotify / Apple 等）取主流档。<br>· 价格为<strong>固定参考价</strong>，非实时行情；建议季度手动复核更新。最后更新 2026-Q3。',
-    docTitle:"GRCB Live — 全球实际消费篮子"
+    docTitle:"GRCB Live — 全球实际消费篮子",
+    formula:"GRCB = Σ 人均年支出(USD)  ·  全球总 = GRCB × 全球人口(~8.3B)",
+    navGRRB:"← GRRB · 全球实际资源篮子（原料侧）"
   },
   en:{
     title:"Global Real Consumer Basket",
@@ -163,7 +169,9 @@ const I18N = {
     updated:"Updated",
     fixedPrice:"Fixed reference",
     sources:"<b>Sources:</b><br>· Housing/food/transport/services: Numbeo global cost-of-living median (population-weighted approx.), numbeo.com.<br>· Residential power / comms: World Bank, OECD public data.<br>· Subscription / electronics retail: official list prices (Netflix / Spotify / Apple etc.), mainstream tier.<br>· Prices are <strong>fixed reference</strong>, not live quotes; manual quarterly review recommended. Last updated 2026-Q3.",
-    docTitle:"GRCB Live — Global Real Consumer Basket"
+    docTitle:"GRCB Live — Global Real Consumer Basket",
+    formula:"GRCB = Σ per-capita spend (USD)  ·  Global total = GRCB × global population (~8.3B)",
+    navGRRB:"← GRRB · Global Real Resource Basket (input side)"
   }
 };
 

@@ -92,6 +92,9 @@ button:disabled{opacity:.55;cursor:default}
   .title{font-size:22px}
   .big{font-size:26px}
 }
+.nav{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px}
+.nav a{color:var(--accent);text-decoration:none}
+.nav a:hover{text-decoration:underline}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -157,6 +160,7 @@ button:disabled{opacity:.55;cursor:default}
     <div class="stack" id="basketStack"></div>
   </section>
 </div>
+<div class="nav"><a href="consumer.html" data-i18n="navGRCB">→ GRCB · 全球实际消费篮子（日常用品/服务侧）</a></div>
 </div>
 
 <script>
@@ -169,7 +173,7 @@ const I18N = {
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
-    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算", chartFew:"快照点不足，强制刷新数次后形成走势", docTitle:"GRRB Live — 全球实际资源篮子" },
+    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算", chartFew:"快照点不足，强制刷新数次后形成走势", docTitle:"GRRB Live — 全球实际资源篮子", navGRCB:"→ GRCB · 全球实际消费篮子（日常用品/服务侧）" },
   en:{ title:"Global Real Resource Basket",
     sub:"A basket of <strong>fixed-quantity</strong> <strong>primary tradable commodities</strong>, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers: extracted fuels, biomass (full scope: food+feed+seed+industrial), manufacturing (downstream tradable products only, no ores), catalysts. Double-counting items removed (electricity/gasoline/diesel/total-primary-energy). Sand & gravel is the largest by material flow (small by USD value), disclosed separately. Excludes stocks, bonds, currencies, bitcoin, or meat (to avoid overlap with feed grains).",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
@@ -177,7 +181,7 @@ const I18N = {
     pop:"Global population", popEst:"Global population (UN basis)", gdp:"Global annual GDP",
     catComp:"Class composition (by current USD value)", keyMkt:"Key market prices", fullBasket:"Full physical basket · 26 items",
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
-    updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B", chartFew:"Not enough snapshots yet — force a few refreshes to build the trend", docTitle:"GRRB Live — Global Real Resource Basket" }
+    updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B", chartFew:"Not enough snapshots yet — force a few refreshes to build the trend", docTitle:"GRRB Live — Global Real Resource Basket", navGRCB:"→ GRCB · Global Real Consumer Basket (consumer side)" }
 };
 let LANG = localStorage.getItem("grrb.lang.v1") || "zh";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
