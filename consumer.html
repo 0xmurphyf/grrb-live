@@ -45,9 +45,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 #langSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:12px}
 .ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
 .ls-btn.active{background:var(--accent);color:#071018;font-weight:600}
-#modeSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:10px}
-.ms-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
-.ms-btn.active{background:var(--metal);color:#071018;font-weight:600}
 .fine{color:var(--faint);font-size:12px;line-height:1.7;margin-top:14px}
 .formula{font-family:"IBM Plex Mono",ui-monospace,monospace;background:#07111d;padding:12px 14px;border-radius:8px;color:#a9d9ff;overflow:auto;margin-top:12px;font-size:12px}
 @media(max-width:900px){
@@ -88,11 +85,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 </div>
 
 <div class="section">
-  <span data-i18n="viewLabel">视角</span>:
-  <div id="modeSwitch">
-    <button type="button" data-mode="wb" class="ms-btn active" data-i18n="modeWB">世行实际消费</button>
-    <button type="button" data-mode="numbeo" class="ms-btn" data-i18n="modeNumbeo">Numbeo 城市成本</button>
-  </div>
 </div>
 
 <div class="grid">
@@ -152,55 +144,10 @@ const CAT_COLOR = {
 const CAT_EN = {"居住":"Housing","食物":"Food","出行":"Transport","衣物":"Clothing","电子":"Electronics","服务":"Services"};
 
 // Numbeo 视角：原城市成本拼篮子（对照用）
-const NUMBEO = [
-  {cat:"居住", name:"房租(1室市中心/月)", en:"Rent (1BR city center/mo)", perCap:7200, src:"Numbeo 全球中位(人口加权)~$600/月", ensrc:"Numbeo global median (pop-weighted) ~$600/mo"},
-  {cat:"居住", name:"家用电", en:"Household electricity", perCap:450, src:"World Bank 居民电价~$0.15/kWh × 250kWh/月", ensrc:"World Bank residential ~$0.15/kWh × 250kWh/mo"},
-  {cat:"居住", name:"水费", en:"Water bill", perCap:240, src:"Numbeo 全球中位~$20/月", ensrc:"Numbeo global median ~$20/mo"},
-  {cat:"居住", name:"宽带", en:"Broadband", perCap:360, src:"Numbeo~$30/月", ensrc:"Numbeo ~$30/mo"},
-  {cat:"居住", name:"手机流量", en:"Mobile data", perCap:120, src:"Numbeo~$10/月", ensrc:"Numbeo ~$10/mo"},
-  {cat:"食物", name:"快餐", en:"Fast food", perCap:480, src:"Numbeo~$8 × 60次/年", ensrc:"Numbeo ~$8 × 60/yr"},
-  {cat:"食物", name:"外带咖啡", en:"Takeout coffee", perCap:360, src:"Numbeo~$3 × 120杯/年", ensrc:"Numbeo ~$3 × 120 cups/yr"},
-  {cat:"食物", name:"面包", en:"Bread", perCap:156, src:"Numbeo~$1.5/500g × 104/年", ensrc:"Numbeo ~$1.5/500g × 104/yr"},
-  {cat:"食物", name:"牛奶", en:"Milk", perCap:125, src:"Numbeo~$1.2/L × 104/年", ensrc:"Numbeo ~$1.2/L × 104/yr"},
-  {cat:"食物", name:"瓶装水", en:"Bottled water", perCap:104, src:"Numbeo~$1/1.5L × 104/年", ensrc:"Numbeo ~$1/1.5L × 104/yr"},
-  {cat:"食物", name:"方便面", en:"Instant noodles", perCap:26, src:"Numbeo~$0.5 × 52/年", ensrc:"Numbeo ~$0.5 × 52/yr"},
-  {cat:"食物", name:"米", en:"Rice", perCap:48, src:"Numbeo~$0.8/kg × 60kg/年", ensrc:"Numbeo ~$0.8/kg × 60kg/yr"},
-  {cat:"食物", name:"鸡蛋", en:"Eggs", perCap:65, src:"Numbeo~$2.5/打 × 26/年", ensrc:"Numbeo ~$2.5/dozen × 26/yr"},
-  {cat:"食物", name:"啤酒", en:"Beer", perCap:104, src:"Numbeo~$2 × 52/年", ensrc:"Numbeo ~$2 × 52/yr"},
-  {cat:"出行", name:"消费汽油", en:"Consumer gasoline", perCap:480, src:"Numbeo~$1.2/L × 400L/年", ensrc:"Numbeo ~$1.2/L × 400L/yr"},
-  {cat:"出行", name:"公交", en:"Public transit", perCap:150, src:"Numbeo~$1.5 × 100次/年", ensrc:"Numbeo ~$1.5 × 100 rides/yr"},
-  {cat:"出行", name:"网约车", en:"Ride-hail", perCap:200, src:"Numbeo~$1/km × 200km/年", ensrc:"Numbeo ~$1/km × 200km/yr"},
-  {cat:"出行", name:"国内机票", en:"Domestic flight", perCap:240, src:"Numbeo~$120 × 2次/年", ensrc:"Numbeo ~$120 × 2/yr"},
-  {cat:"出行", name:"自行车", en:"Bicycle", perCap:80, src:"~$400/5年摊", ensrc:"~$400 / 5yr amortized"},
-  {cat:"衣物", name:"T恤", en:"T-shirt", perCap:60, src:"~$15 × 4/年", ensrc:"~$15 × 4/yr"},
-  {cat:"衣物", name:"运动鞋", en:"Sneakers", perCap:60, src:"~$60 × 1/年", ensrc:"~$60 × 1/yr"},
-  {cat:"衣物", name:"牛仔裤", en:"Jeans", perCap:50, src:"~$50 × 1/年", ensrc:"~$50 × 1/yr"},
-  {cat:"衣物", name:"外套", en:"Coat", perCap:50, src:"~$100/2年摊", ensrc:"~$100 / 2yr amortized"},
-  {cat:"电子", name:"手机", en:"Smartphone", perCap:267, src:"Apple 基线~$800/3年摊", ensrc:"Apple baseline ~$800 / 3yr amortized"},
-  {cat:"电子", name:"笔记本", en:"Laptop", perCap:175, src:"~$700/4年摊", ensrc:"~$700 / 4yr amortized"},
-  {cat:"电子", name:"耳机", en:"Earbuds", perCap:33, src:"~$100/3年摊", ensrc:"~$100 / 3yr amortized"},
-  {cat:"电子", name:"电视", en:"TV", perCap:71, src:"~$500/7年摊", ensrc:"~$500 / 7yr amortized"},
-  {cat:"服务", name:"理发", en:"Haircut", perCap:120, src:"Numbeo~$15 × 8/年", ensrc:"Numbeo ~$15 × 8/yr"},
-  {cat:"服务", name:"Netflix", en:"Netflix", perCap:156, src:"官网标准档~$13/月", ensrc:"Official standard tier ~$13/mo"},
-  {cat:"服务", name:"Spotify", en:"Spotify", perCap:132, src:"官网~$11/月", ensrc:"Official ~$11/mo"},
-  {cat:"服务", name:"健身房", en:"Gym", perCap:480, src:"Numbeo~$40/月", ensrc:"Numbeo ~$40/mo"},
-  {cat:"服务", name:"看病", en:"Doctor visit", perCap:100, src:"Numbeo~$50 × 2/年", ensrc:"Numbeo ~$50 × 2/yr"},
-  {cat:"服务", name:"牙医", en:"Dentist", perCap:100, src:"~$200/2年摊", ensrc:"~$200 / 2yr amortized"},
-  {cat:"服务", name:"学费", en:"Tuition", perCap:1500, src:"全球中位偏低估算~$1500/年", ensrc:"Low-side global median est. ~$1500/yr"},
-  {cat:"服务", name:"快递", en:"Parcel", perCap:60, src:"~$5 × 12/年", ensrc:"~$5 × 12/yr"},
-];
-
 // 世行模式：六类由 ICP 份额生成
 function wbRows(){
   return CAT_ORDER.map(c=>({cat:c, share:CAT_SHARE[c], perCap:WB_PERCAP*CAT_SHARE[c], global:WB_GLOBAL*CAT_SHARE[c]}));
 }
-function numbeoRows(){
-  const cats={}; CAT_ORDER.forEach(c=>cats[c]=0);
-  const rows = NUMBEO.map(it=>{ cats[it.cat]+=it.perCap; return {it, v:it.perCap}; });
-  const total = Object.values(cats).reduce((a,b)=>a+b,0);
-  return {rows, cats, total};
-}
-
 const I18N = {
   zh:{
     title:"全球实际消费篮子",
@@ -212,14 +159,13 @@ const I18N = {
     full:"完整消费篮子",
     itemCount:"类",
     colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
-    viewLabel:"视角", modeWB:"世行实际消费", modeNumbeo:"Numbeo 城市成本", toGRRB:"→ GRRB(原料侧实物篮子)", toGRRB:"→ GRRB(原料侧实物篮子)",
+    toGRRB:"→ GRRB(原料侧实物篮子)", toGRRB:"→ GRRB(原料侧实物篮子)",
     globalTotal:"全球总消费",
     updated:"数据年",
     fixedPrice:"年度数据",
     sources:'<b>数据来源：</b><br>· 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>· 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>· Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>· 频率为<strong>年度</strong>更新（世行口径），非实时行情。',
     docTitle:"GRCB Live — 全球实际消费篮子",
     formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,443 · 全球总 ≈ $60 万亿",
-    formulaNumbeo:"GRCB(Numbeo) = Σ 城市中位年支出 · 住房被抬至 ~58%（城市中产口径，非全球实际消费）"
   },
   en:{
     title:"Global Real Consumer Basket",
@@ -231,19 +177,18 @@ const I18N = {
     full:"Full consumer basket",
     itemCount:"cats",
     colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
-    viewLabel:"View", modeWB:"World Bank actual consumption", modeNumbeo:"Numbeo city cost", toGRRB:"→ GRRB (input-side real basket)", toGRRB:"→ GRRB (input-side real basket)",
+    toGRRB:"→ GRRB (input-side real basket)", toGRRB:"→ GRRB (input-side real basket)",
     globalTotal:"Global consumption",
     updated:"Data year",
     fixedPrice:"Annual data",
     sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households & NPISHs final consumption exp., current US$), <b>SP.POP.TOTL</b> (world population). 2023 latest available est.<br>· Category shares: World Bank ICP (International Comparison Program) global expenditure-structure approx (housing/food/transport/clothing/electronics/services).<br>· Numbeo view: numbeo.com global city cost-of-living median (pop-weighted), contrast only.<br>· <strong>Annual</strong> update cadence (World Bank basis), not live quotes.",
     docTitle:"GRCB Live — Global Real Consumer Basket",
     formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,443/cap · global ≈ $60T",
-    formulaNumbeo:"GRCB(Numbeo) = Σ city-median annual spend · housing inflated to ~58% (urban middle-class framing, not global actual consumption)"
   }
 };
 
 let LANG = localStorage.getItem("grcb.lang.v1") || "zh";
-let MODE = localStorage.getItem("grcb.mode.v1") || "wb";
+let MODE = "wb";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
 function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
 function money(x,d=0){ if(x==null||!Number.isFinite(x)) return "—"; return "$"+x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
@@ -290,46 +235,8 @@ function render(){
       const r = rows.find(x=>x.cat===c);
       return `<div class="row"><div class="l">${catName(c)}</div><div class="num">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
     }).join("");
-  } else {
-    const {rows, cats, total} = numbeoRows();
-    document.getElementById("grcb").textContent = money(total);
-    document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(total*POP):moneyT(total*POP));
-    document.getElementById("formulaBox").textContent = T("formulaNumbeo");
-
-    const maxCat = Math.max(...Object.values(cats));
-    document.getElementById("catBars").innerHTML = CAT_ORDER.map(c=>{
-      const v=cats[c], share=total?v/total*100:0;
-      return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(v)} · ${share.toFixed(1)}%</span></div>
-        <div class="track"><div class="fill" style="width:${(v/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
-    }).join("");
-
-    document.getElementById("tickers").innerHTML = NUMBEO.filter((_,i)=>i<4).map(it=>{
-      return `<div class="mini"><div class="k">${LANG==="en"?it.en:it.name}</div><div class="p">${money(it.perCap)}</div><div class="s">${T("perCap")}</div></div>`;
-    }).join("");
-
-    let lastCat="", body="";
-    for(const row of rows){
-      if(row.it.cat!==lastCat){
-        body += `<tr class="cat-h"><td colspan="4" class="cat-${catClass(row.it.cat)}">${catName(row.it.cat)}</td></tr>`;
-        lastCat=row.it.cat;
-      }
-      const share = total ? (row.v/total*100).toFixed(1)+"%" : "—";
-      body += `<tr><td>${LANG==="en"?row.it.en:row.it.name}<br><span class="meta">${LANG==="en"?row.it.ensrc:row.it.src}</span></td><td class="num">${share}</td><td class="num">${money(row.v)}</td><td class="num">${LANG==="en"?moneyT_en(row.v*POP):moneyT(row.v*POP)}</td></tr>`;
-    }
-    document.getElementById("basketBody").innerHTML = body;
-    lastCat=""; let stack="";
-    for(const row of rows){
-      if(row.it.cat!==lastCat){
-        stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${catName(row.it.cat)}</div>`;
-        lastCat=row.it.cat;
-      }
-      stack += `<div class="row"><div class="l">${LANG==="en"?row.it.en:row.it.name}<div class="sub">${LANG==="en"?row.it.ensrc:row.it.src}</div></div><div class="num">${money(row.v)}</div></div>`;
-    }
-    document.getElementById("basketStack").innerHTML = stack;
-  }
-}
-
-function catClass(name){
+  } else {}
+}function catClass(name){
   return "cat-"+({"居住":"energy","食物":"bio","出行":"mfg","衣物":"tech","电子":"tech","服务":"tech"})[name];
 }
 
@@ -337,17 +244,11 @@ function setLang(l){
   LANG=l; localStorage.setItem("grcb.lang.v1", l); applyStatic(); render();
   document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-lang")===LANG));
 }
-function setMode(m){
-  MODE=m; localStorage.setItem("grcb.mode.v1", m); render();
-  document.querySelectorAll("#modeSwitch .ms-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-mode")===MODE));
-}
 
 document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{ b.onclick = ()=>setLang(b.getAttribute("data-lang")); });
-document.querySelectorAll("#modeSwitch .ms-btn").forEach(b=>{ b.onclick = ()=>setMode(b.getAttribute("data-mode")); });
 applyStatic();
 render();
 setLang(LANG);
-setMode(MODE);
 </script>
 </body>
 </html>
