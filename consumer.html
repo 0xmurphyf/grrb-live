@@ -99,22 +99,14 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
     <div class="cards" id="tickers"></div>
   </section>
 
-    <section class="card">
+      <p class="formula" id="formulaBox"></p>
+
+<section class="card">
     <div class="label" data-i18n="catConst">类别构成（COICOP 全球支出份额）</div>
     <div class="bars" id="catBars"></div>
   </section>
 
-<section class="card">
-    <div class="label"><span data-i18n="full">完整消费篮子</span> · <span id="itemCount">0</span> <span data-i18n="itemCount">类</span></div>
-    <div class="desk">
-      <table>
-        <thead><tr><th data-i18n="colCat">类别</th><th data-i18n="colShare">占指数</th><th class="num" data-i18n="colPerCap">人均金额</th><th class="num" data-i18n="colGlobal">全球总值</th></tr></thead>
-        <tbody id="basketBody"></tbody>
-      </table>
-    </div>
-    <div class="stack" id="basketStack"></div>
-    <div class="formula" id="formulaBox"></div>
-  </section>
+
 </div>
 
 <p class="fine" data-i18n="sources">
@@ -157,35 +149,33 @@ const I18N = {
     sub:'一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。13 类 COICOP 拆分权重采用<strong>Eurostat 2024 全球消费结构（COICOP 真实分类）</strong>作全球结构近似，而非城市生活成本中位价。',
     noteBox:'<b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，13 类按 <b>Eurostat 2024 COICOP 结构</b> 拆分（食品/居住/交通/餐饮/文娱/保险金融/家用设备/医疗/衣物/烟酒/信息通讯/教育/其他）；该结构以 EU 2024 为代理，真实全球食品份额更高、住房更低。这是"真实花出去的钱"，不是城市中产生活成本。',
     perCap:"人均年度实际消费",
-
     keyItems:"关键类别",
-    full:"完整消费篮子",
-    itemCount:"类",
-    colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
-    toGRRB:"→ GRRB(原料侧实物篮子)", catConst:"类别构成（COICOP 全球支出份额）", toGRRB:"→ GRRB(原料侧实物篮子)",
+    bigLabel:"全球实际消费篮子 · 人均",
+    catConst:"类别构成（COICOP 全球支出份额）",
     globalTotal:"全球总消费",
     updated:"数据年",
     fixedPrice:"年度数据",
+    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,838 · 全球总 ≈ $63.2 万亿 (2024)",
     sources:"<b>数据来源：</b><br>· 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）——2024 全球合计 $63.19 万亿。<br>· 13 类结构：Eurostat 2024 COICOP 支出构成（真实 COICOP 分类），作全球结构近似；世行全球层面仅发总额、不发分项，故用 EU 2024 代理（富国偏，真实全球食品份额更高、住房更低）。",
+    toGRRB:"→ GRRB(原料侧实物篮子)",
+    docTitle:"GRCB Live — 全球实际消费篮子",
   },
   en:{
     title:"Global Real Consumer Basket",
-    sub:"A basket of <strong>money actually spent globally</strong>, sourced from the <strong>World Bank national accounts</strong>: Households & NPISHs final consumption expenditure (NE.CON.PRVT.CD). Index = real consumption flow × price, same framing as the GRRB input side (both 'real flow × price'). Six categories split by <strong>ICP global expenditure shares</strong>, not city cost-of-living medians.",
-    noteBox:"<b>How to read it.</b> Main axis (default) = World Bank <b>NE.CON.PRVT.CD</b>: households & NPISHs final consumption expenditure (current US$, includes imputed rent, durables, NPISH; excludes home purchase principal, taxes, transfers). <b>Per-capita = global total ÷ world population</b>; six categories split by <b>ICP global expenditure shares</b> (housing/food/transport/clothing/electronics/services). This is 'money actually spent', not urban middle-class cost of living.",
+    sub:"A basket of <strong>money actually spent globally</strong>, sourced from the <strong>World Bank national accounts</strong>: Households & NPISHs final consumption expenditure (NE.CON.PRVT.CD). Index = real consumption flow × price, same framing as the GRRB input side (both 'real flow × price'). 13 categories split by <strong>Eurostat 2024 COICOP global expenditure shares</strong>, not city cost-of-living medians.",
+    noteBox:"<b>How to read it.</b> Main axis (default) = World Bank <b>NE.CON.PRVT.CD</b>: households & NPISHs final consumption expenditure (current US$, includes imputed rent, durables, NPISH; excludes home purchase principal, taxes, transfers). <b>Per-capita = global total ÷ world population</b>; 13 categories split by <b>Eurostat 2024 COICOP structure</b> (food/housing/transport/restaurants/rec/insurance/furnishings/health/clothing/alcohol-tobacco/comm/education/other); structure uses EU 2024 as proxy (high-income biased; real global food share higher, housing lower). This is 'money actually spent', not urban middle-class cost of living.",
     perCap:"Annual actual consumption / cap",
-
     keyItems:"Key categories",
-    full:"Full consumer basket",
-    itemCount:"cats",
-    colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
-    toGRRB:"→ GRRB (input-side real basket)", catConst:"Category mix (COICOP global expenditure shares)", toGRRB:"→ GRRB (input-side real basket)",
+    bigLabel:"Global Real Consumer Basket · per capita",
+    catConst:"Category mix (COICOP global expenditure shares)",
     globalTotal:"Global consumption",
     updated:"Data year",
     fixedPrice:"Annual data",
-    sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households &amp; NPISHs final consumption exp., current US$) — 2024 global total $63.19T.<br>· 13-category structure: Eurostat 2024 COICOP expenditure breakdown (real COICOP classification) as global-structure proxy; WDI publishes global total only (no COICOP split at world level), so EU 2024 is the proxy (high-income biased; real global food share higher, housing lower).",
-    docTitle:"GRCB Live — Global Real Consumer Basket",
     formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,838/cap · global ≈ $63.2T (2024)",
-  }
+    sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households & NPISHs final consumption exp., current US$) — 2024 global total $63.19T.<br>· 13-category structure: Eurostat 2024 COICOP expenditure breakdown (real COICOP classification) as global-structure proxy; WDI publishes global total only (no COICOP split at world level), so EU 2024 is the proxy (high-income biased; real global food share higher, housing lower).",
+    toGRRB:"→ GRRB (input-side real basket)",
+    docTitle:"GRCB Live — Global Real Consumer Basket",
+  },
 };
 
 let LANG = "zh";
@@ -204,7 +194,6 @@ function applyStatic(){
 
 function render(){
   const wb = (MODE==="wb");
-  document.getElementById("itemCount").textContent = CAT_ORDER.length;
   document.getElementById("bigLabel").textContent = T("perCap");
 
   if(wb){
@@ -226,16 +215,7 @@ function render(){
       return `<div class="mini"><div class="k">${catName(c)}</div><div class="p">${money(r.perCap)}</div><div class="s">${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
     }).join("");
 
-    let body="";
-    for(const c of catsSorted){
-      const r = rows.find(x=>x.cat===c);
-      body += `<tr><td>${catName(c)}</td><td class="num">${(CAT_SHARE[c]*100).toFixed(0)}%</td><td class="num">${money(r.perCap)}</td><td class="num">${LANG==="en"?moneyT_en(r.global):moneyT(r.global)}</td></tr>`;
-    }
-    document.getElementById("basketBody").innerHTML = body;
-    document.getElementById("basketStack").innerHTML = catsSorted.map(c=>{
-      const r = rows.find(x=>x.cat===c);
-      return `<div class="row"><div class="l">${catName(c)}</div><div class="num">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
-    }).join("");
+
   } else {}
 }function setLang(l){
   LANG=l; localStorage.setItem("grcb.lang.v1", l); applyStatic(); render();
