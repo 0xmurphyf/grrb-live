@@ -169,7 +169,7 @@ const I18N = {
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
-    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算" },
+    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算", chartFew:"快照点不足，强制刷新数次后形成走势" },
   en:{ title:"Global Real Resource Basket",
     sub:"A basket of <strong>fixed-quantity</strong> <strong>primary tradable commodities</strong>, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers: extracted fuels, biomass (full scope: food+feed+seed+industrial), manufacturing (downstream tradable products only, no ores), catalysts. Double-counting items removed (electricity/gasoline/diesel/total-primary-energy). Sand & gravel is the largest by material flow (small by USD value), disclosed separately. Excludes stocks, bonds, currencies, bitcoin, or meat (to avoid overlap with feed grains).",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
@@ -177,7 +177,7 @@ const I18N = {
     pop:"Global population", popEst:"Global population (UN basis)", gdp:"Global annual GDP",
     catComp:"Class composition (by current USD value)", keyMkt:"Key market prices", fullBasket:"Full physical basket · 26 items",
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
-    updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B" }
+    updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B", chartFew:"Not enough snapshots yet — force a few refreshes to build the trend" }
 };
 let LANG = localStorage.getItem("grrb.lang.v1") || "en";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
@@ -211,7 +211,7 @@ const BASKET = [
   {key:"coal",   cat:"动力与能源", name:"煤炭",         unit:"t",     cents:false, yahoo:"MTF=F", annual:8.0e9,  src:"IEA 2024"},
   {key:"wti",    cat:"动力与能源", name:"WTI 原油",     unit:"bbl",   cents:false, yahoo:"CL=F",  annual:4.0e9,  src:"BP Stat Rev 2024"},
   {key:"brent",  cat:"动力与能源", name:"布伦特原油",   unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:3.8e9,  src:"BP Stat Rev 2024"},
-  {key:"othoil", cat:"动力与能源", name:"其他原油",     unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:2.5e10, src:"全球原油-WTI/Brent余量(估算)"},
+  {key:"othoil", cat:"动力与能源", name:"其他原油",     unit:"bbl",   cents:false, yahoo:"BZ=F",  annual:2.5e10, src:"全球原油-WTI/Brent余量(估算)", ensrc:"Other global crude (est.)"},
   {key:"ng",     cat:"动力与能源", name:"亨利港天然气", unit:"MMBtu", cents:false, yahoo:"NG=F",  annual:1.5e11, src:"IEA 2024"},
   {key:"uranium",cat:"动力与能源", name:"铀 U3O8",      unit:"lb",    cents:false, yahoo:"UX=F",  annual:1.3e8,  src:"World Nuclear 2024"},
 
@@ -247,7 +247,7 @@ const BASKET = [
 ];
 // 品种英文名
 const NAME_EN = {
-  coal:"Coal", wti:"WTI Crude", brent:"Brent Crude", ng:"Henry Hub Gas", ho:"Heating Oil", rbob:"RBOB Gasoline", uranium:"Uranium U3O8",
+  coal:"Coal", wti:"WTI Crude", brent:"Brent Crude", othoil:"Other crude", ng:"Henry Hub Gas", ho:"Heating Oil", rbob:"RBOB Gasoline", uranium:"Uranium U3O8",
   corn:"Corn", wheat:"Wheat", rice:"Rice", soy:"Soybeans", sugar:"Raw Sugar", cotton:"Cotton", coffee:"Coffee", cocoa:"Cocoa",
   iron:"62% Iron Ore", hrc:"Hot-rolled Steel", alum:"Aluminum", copper:"Copper", zinc:"Zinc", nickel:"Nickel", cement:"Cement",
   gold:"Industrial Gold", silver:"Industrial Silver", plat:"Platinum", pall:"Palladium",
@@ -525,7 +525,7 @@ function render(){
     body += `<tr>
       <td><span class="${ledCls}"></span>${nameLink}${proxyNote}</td>
       <td>${(()=>{const c=convQty(row.item.unit, qtyOf(row.item)); return c.v.toLocaleString(undefined,{maximumFractionDigits:4})+" "+c.u;})()}</td>
-      <td>${(()=>{const c=convQty(row.item.unit, row.item.annual); return c.v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+c.u;})()}<br><span class="meta">${srcLink(row.item.src)}</span></td>
+      <td>${(()=>{const c=convQty(row.item.unit, row.item.annual); return c.v.toLocaleString(undefined,{maximumFractionDigits:2})+" "+c.u;})()}<br><span class="meta">${srcLink(LANG==="en" && row.item.ensrc ? row.item.ensrc : row.item.src)}</span></td>
       <td class="num">${row.q.price==null?"—":money(convPrice(row.item.unit,row.q.price).v, row.q.price<2?4:2)}/${convPrice(row.item.unit,row.q.price).u}</td>
       <td class="num">${row.v==null?"—":money(row.v,0)}</td>
       <td class="num">${share}</td>
@@ -544,7 +544,7 @@ function render(){
     const ca = convQty(row.item.unit, row.item.annual);
     const cp = convPrice(row.item.unit, row.q.price);
     const ledCls = row.item.proxy ? "led warn" : (row.q.price!=null ? "led ok" : "led fail");
-    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · ${T("thAnnual")} ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${cq.u} (${row.item.src})</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
+    stack += `<div class="row"><div class="l"><span class="${ledCls}"></span><div>${itemName(row.item)}<div class="sub">${T("thQty")} ${cq.v.toLocaleString(undefined,{maximumFractionDigits:4})} ${cq.u} · ${T("thAnnual")} ${ca.v.toLocaleString(undefined,{maximumFractionDigits:2})} ${cq.u} (LANG==="en" && row.item.ensrc ? row.item.ensrc : row.item.src)</div></div></div><div class="num">${row.v==null?"—":money(row.v,0)}</div></div>`;
   }
   document.getElementById("basketStack").innerHTML = stack;
 
@@ -561,7 +561,7 @@ function drawChart(){
   ctx.clearRect(0,0,w,h);
   if(history.length<2){
     ctx.fillStyle="#5d6e82"; ctx.font="13px sans-serif";
-    ctx.fillText("快照点不足，强制刷新数次后形成走势", 20, h/2);
+    ctx.fillText(T("chartFew"), 20, h/2);
     return;
   }
   const vals=history.map(p=>p.v);
