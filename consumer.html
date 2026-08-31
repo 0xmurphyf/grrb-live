@@ -72,6 +72,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
   <div>
     <h1 class="title" data-i18n="title">全球实际消费篮子</h1>
     <p class="sub" data-i18n="sub">一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。</p>
+  <div style="margin-top:14px"><a class="pill" style="text-decoration:none;color:var(--accent)" href="index.html" data-i18n="toGRRB">→ GRRB(原料侧实物篮子)</a></div>
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:10px">
     <div class="live"><span class="dot"></span><span id="status">年度数据</span></div>
@@ -92,7 +93,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
     <button type="button" data-mode="wb" class="ms-btn active" data-i18n="modeWB">世行实际消费</button>
     <button type="button" data-mode="numbeo" class="ms-btn" data-i18n="modeNumbeo">Numbeo 城市成本</button>
   </div>
-  <span class="tag" id="freshTag">年度 · 2023</span>
 </div>
 
 <div class="grid">
@@ -137,7 +137,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 
 <script>
 const POP = 8.06e9;            // 世界人口 2023 (WDI SP.POP.TOTL)
-const YEAR = "2023 (est.)";
 // 世行 NE.CON.PRVT.CD 世界合计（current US$）：2022=56.83万亿；2023 估算 ~60万亿
 const WB_GLOBAL = 60.0e12;     // 全球家庭最终消费 (current US$, 2023 est.)
 const WB_PERCAP = WB_GLOBAL / POP; // ≈ $7,443
@@ -213,13 +212,13 @@ const I18N = {
     full:"完整消费篮子",
     itemCount:"类",
     colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
-    viewLabel:"视角", modeWB:"世行实际消费", modeNumbeo:"Numbeo 城市成本",
+    viewLabel:"视角", modeWB:"世行实际消费", modeNumbeo:"Numbeo 城市成本", toGRRB:"→ GRRB(原料侧实物篮子)", toGRRB:"→ GRRB(原料侧实物篮子)",
     globalTotal:"全球总消费",
     updated:"数据年",
     fixedPrice:"年度数据",
     sources:'<b>数据来源：</b><br>· 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>· 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>· Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>· 频率为<strong>年度</strong>更新（世行口径），非实时行情。',
     docTitle:"GRCB Live — 全球实际消费篮子",
-    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,443 · 全球总 ≈ $60 万亿 (2023 est.)",
+    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,443 · 全球总 ≈ $60 万亿",
     formulaNumbeo:"GRCB(Numbeo) = Σ 城市中位年支出 · 住房被抬至 ~58%（城市中产口径，非全球实际消费）"
   },
   en:{
@@ -232,13 +231,13 @@ const I18N = {
     full:"Full consumer basket",
     itemCount:"cats",
     colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
-    viewLabel:"View", modeWB:"World Bank actual consumption", modeNumbeo:"Numbeo city cost",
+    viewLabel:"View", modeWB:"World Bank actual consumption", modeNumbeo:"Numbeo city cost", toGRRB:"→ GRRB (input-side real basket)", toGRRB:"→ GRRB (input-side real basket)",
     globalTotal:"Global consumption",
     updated:"Data year",
     fixedPrice:"Annual data",
     sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households & NPISHs final consumption exp., current US$), <b>SP.POP.TOTL</b> (world population). 2023 latest available est.<br>· Category shares: World Bank ICP (International Comparison Program) global expenditure-structure approx (housing/food/transport/clothing/electronics/services).<br>· Numbeo view: numbeo.com global city cost-of-living median (pop-weighted), contrast only.<br>· <strong>Annual</strong> update cadence (World Bank basis), not live quotes.",
     docTitle:"GRCB Live — Global Real Consumer Basket",
-    formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,443/cap · global ≈ $60T (2023 est.)",
+    formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,443/cap · global ≈ $60T",
     formulaNumbeo:"GRCB(Numbeo) = Σ city-median annual spend · housing inflated to ~58% (urban middle-class framing, not global actual consumption)"
   }
 };
@@ -255,7 +254,6 @@ function applyStatic(){
   document.title = T("docTitle");
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = T(el.getAttribute("data-i18n")); });
   document.getElementById("status").textContent = T("fixedPrice");
-  document.getElementById("freshTag").textContent = "年度 · " + YEAR;
 }
 
 function render(){
@@ -267,7 +265,6 @@ function render(){
     const rows = wbRows();
     document.getElementById("grcb").textContent = money(WB_PERCAP);
     document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(WB_GLOBAL):moneyT(WB_GLOBAL));
-    document.getElementById("grcbUpdated").textContent = T("updated")+": "+YEAR;
     document.getElementById("formulaBox").textContent = T("formulaWB");
 
     const maxCat = Math.max(...rows.map(r=>r.perCap));
@@ -296,7 +293,6 @@ function render(){
     const {rows, cats, total} = numbeoRows();
     document.getElementById("grcb").textContent = money(total);
     document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(total*POP):moneyT(total*POP));
-    document.getElementById("grcbUpdated").textContent = T("updated")+": Numbeo 2024";
     document.getElementById("formulaBox").textContent = T("formulaNumbeo");
 
     const maxCat = Math.max(...Object.values(cats));
