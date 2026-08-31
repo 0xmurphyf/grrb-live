@@ -89,8 +89,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 <div class="section">
   <span data-i18n="viewLabel">视角</span>:
   <div id="modeSwitch">
-    <button type="button" data-mode="wb" class="ms-btn active">世行实际消费</button>
-    <button type="button" data-mode="numbeo" class="ms-btn">Numbeo 城市成本</button>
+    <button type="button" data-mode="wb" class="ms-btn active" data-i18n="modeWB">世行实际消费</button>
+    <button type="button" data-mode="numbeo" class="ms-btn" data-i18n="modeNumbeo">Numbeo 城市成本</button>
   </div>
   <span class="tag" id="freshTag">年度 · 2023</span>
 </div>
@@ -213,7 +213,7 @@ const I18N = {
     full:"完整消费篮子",
     itemCount:"类",
     colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
-    viewLabel:"视角",
+    viewLabel:"视角", modeWB:"世行实际消费", modeNumbeo:"Numbeo 城市成本",
     globalTotal:"全球总消费",
     updated:"数据年",
     fixedPrice:"年度数据",
@@ -232,7 +232,7 @@ const I18N = {
     full:"Full consumer basket",
     itemCount:"cats",
     colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
-    viewLabel:"View",
+    viewLabel:"View", modeWB:"World Bank actual consumption", modeNumbeo:"Numbeo city cost",
     globalTotal:"Global consumption",
     updated:"Data year",
     fixedPrice:"Annual data",
