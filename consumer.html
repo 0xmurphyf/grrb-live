@@ -96,11 +96,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
   </section>
 
   <section class="card">
-    <div class="label" data-i18n="catConst">类别构成（ICP 全球支出份额）</div>
-    <div class="bars" id="catBars"></div>
-  </section>
-
-  <section class="card">
     <div class="label" data-i18n="keyItems">关键类别</div>
     <div class="cards" id="tickers"></div>
   </section>
@@ -154,7 +149,7 @@ const I18N = {
     sub:'一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。',
     noteBox:'<b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，六类按 <b>ICP 全球支出份额</b> 拆分（住房/食品/交通/衣物/电子/服务）。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。',
     perCap:"人均年度实际消费",
-    catConst:"类别构成（ICP 全球支出份额）",
+
     keyItems:"关键类别",
     full:"完整消费篮子",
     itemCount:"类",
@@ -172,7 +167,7 @@ const I18N = {
     sub:"A basket of <strong>money actually spent globally</strong>, sourced from the <strong>World Bank national accounts</strong>: Households & NPISHs final consumption expenditure (NE.CON.PRVT.CD). Index = real consumption flow × price, same framing as the GRRB input side (both 'real flow × price'). Six categories split by <strong>ICP global expenditure shares</strong>, not city cost-of-living medians. Toggle 'City cost-of-living view (Numbeo)' for contrast — the two mean different things, don't mix them into one index.",
     noteBox:"<b>How to read it.</b> Main axis (default) = World Bank <b>NE.CON.PRVT.CD</b>: households & NPISHs final consumption expenditure (current US$, includes imputed rent, durables, NPISH; excludes home purchase principal, taxes, transfers). <b>Per-capita = global total ÷ world population</b>; six categories split by <b>ICP global expenditure shares</b> (housing/food/transport/clothing/electronics/services). This is 'money actually spent', not urban middle-class cost of living. Toggle 'Numbeo view' to see the city-median basket (≈$14k/capita, housing inflated to ~58%, a different framing).",
     perCap:"Annual actual consumption / cap",
-    catConst:"Category mix (ICP global expenditure shares)",
+
     keyItems:"Key categories",
     full:"Full consumer basket",
     itemCount:"cats",
@@ -213,13 +208,6 @@ function render(){
     document.getElementById("formulaBox").textContent = T("formulaWB");
 
     const catsSorted = [...CAT_ORDER].sort((a,b)=> (WB_PERCAP*CAT_SHARE[b]) - (WB_PERCAP*CAT_SHARE[a]));
-    const maxCat = Math.max(...rows.map(r=>r.perCap));
-    document.getElementById("catBars").innerHTML = catsSorted.map(c=>{
-      const r = rows.find(x=>x.cat===c);
-      return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</span></div>
-        <div class="track"><div class="fill" style="width:${(r.perCap/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
-    }).join("");
-
     document.getElementById("tickers").innerHTML = catsSorted.slice(0,4).map(c=>{
       const r = rows.find(x=>x.cat===c);
       return `<div class="mini"><div class="k">${catName(c)}</div><div class="p">${money(r.perCap)}</div><div class="s">${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
