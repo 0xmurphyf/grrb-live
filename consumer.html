@@ -68,7 +68,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 <header class="top">
   <div>
     <h1 class="title" data-i18n="title">全球实际消费篮子</h1>
-    <p class="sub" data-i18n="sub">一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。</p>
+    <p class="sub" data-i18n="sub">一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。13 类 COICOP 拆分权重采用<strong>Eurostat 2024 全球消费结构（COICOP 真实分类）</strong>作全球结构近似，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。</p>
   <div style="margin-top:14px"><a class="pill" style="text-decoration:none;color:var(--accent)" href="index.html" data-i18n="toGRRB">→ GRRB(原料侧实物篮子)</a></div>
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:10px">
@@ -81,7 +81,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 </header>
 
 <div class="note-box" data-i18n="noteBox">
-  <b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，六类按 <b>ICP 全球支出份额</b> 拆分（住房/食品/交通/衣物/电子/服务）。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。
+  <b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，13 类按 <b>Eurostat 2024 COICOP 结构</b> 拆分（食品/居住/交通/餐饮/文娱/保险金融/家用设备/医疗/衣物/烟酒/信息通讯/教育/其他）；该结构以 EU 2024 为代理，真实全球食品份额更高、住房更低。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。
 </div>
 
 <div class="section">
@@ -115,28 +115,33 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 
 <p class="fine" data-i18n="sources">
   <b>数据来源：</b><br>
-  · 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>
-  · 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>
+  · 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）——2024 全球合计 $63.19 万亿（WDI 实测）。<br>
+  · 13 类结构：Eurostat 2024 COICOP 支出构成（真实 COICOP 分类），作全球结构近似代理；世行 WDI 全球层面仅发总额、不发 COICOP 分项，故用 EU 2024 代理（富国偏，真实全球食品份额更高、住房更低）。<br>
   · Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>
   · 频率为<strong>年度</strong>更新（世行口径），非实时行情。
 </p>
 </div>
 
 <script>
-const POP = 8.06e9;            // 世界人口 2023 (WDI SP.POP.TOTL)
-// 世行 NE.CON.PRVT.CD 世界合计（current US$）：2022=56.83万亿；2023 估算 ~60万亿
-const WB_GLOBAL = 60.0e12;     // 全球家庭最终消费 (current US$, 2023 est.)
-const WB_PERCAP = WB_GLOBAL / POP; // ≈ $7,443
+const POP = 8.06e9;            // 世界人口 2024 (WDI SP.POP.TOTL 2023≈80.6亿)
+const YEAR = "2024";
+// 世行 NE.CON.PRVT.CD 世界合计（current US$）：2024 = $63.19 万亿（WDI 实测）
+const WB_GLOBAL = 63.19e12;    // 全球家庭最终消费 (current US$, 2024)
+const WB_PERCAP = WB_GLOBAL / POP; // ≈ $7,838
 
-// 六类 ICP 全球支出份额（近似）
-const CAT_ORDER = ["居住","食物","出行","衣物","电子","服务"];
+// 13 类 COICOP 支出份额（来源: Eurostat 2024 全球结构代理; 真实 COICOP 分类, 富国偏, 全球食品份额实际更高）
+const CAT_ORDER = ["食品","居住","交通","餐饮住宿","文娱","保险金融","家用设备","医疗","衣物","烟酒","信息通讯","教育","其他"];
 const CAT_SHARE = {
-  "居住":0.20, "食物":0.22, "出行":0.09, "衣物":0.04, "电子":0.08, "服务":0.37
+  "食品":0.132, "居住":0.236, "交通":0.127, "餐饮住宿":0.092, "文娱":0.075,
+  "保险金融":0.061, "家用设备":0.048, "医疗":0.045, "衣物":0.041, "烟酒":0.037,
+  "信息通讯":0.034, "教育":0.009, "其他":0.063
 };
 const CAT_COLOR = {
-  "居住":"#e0a04a","食物":"#5dbe8a","出行":"#7eb0d4","衣物":"#c9b896","电子":"#b89cc9","服务":"#d4a0c0"
+  "食品":"#5dbe8a","居住":"#e0a04a","交通":"#7eb0d4","餐饮住宿":"#d4a0c0","文娱":"#b89cc9",
+  "保险金融":"#c9b896","家用设备":"#9ec9d4","医疗":"#e07a84","衣物":"#c9a896","烟酒":"#a896c9",
+  "信息通讯":"#96c9a8","教育":"#c9c496","其他":"#8b9bb0"
 };
-const CAT_EN = {"居住":"Housing","食物":"Food","出行":"Transport","衣物":"Clothing","电子":"Electronics","服务":"Services"};
+const CAT_EN = {"食品":"Food & non-alc beverages","居住":"Housing & utilities","交通":"Transport","餐饮住宿":"Restaurants & hotels","文娱":"Recreation & culture","保险金融":"Insurance & financial","家用设备":"Furnishings & equip","医疗":"Health","衣物":"Clothing & footwear","烟酒":"Alcohol & tobacco","信息通讯":"Info & comms","教育":"Education","其他":"Other goods & svc"};
 
 // Numbeo 视角：原城市成本拼篮子（对照用）
 // 世行模式：六类由 ICP 份额生成
@@ -146,8 +151,8 @@ function wbRows(){
 const I18N = {
   zh:{
     title:"全球实际消费篮子",
-    sub:'一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。',
-    noteBox:'<b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，六类按 <b>ICP 全球支出份额</b> 拆分（住房/食品/交通/衣物/电子/服务）。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。',
+    sub:'一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。13 类 COICOP 拆分权重采用<strong>Eurostat 2024 全球消费结构（COICOP 真实分类）</strong>作全球结构近似，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。',
+    noteBox:'<b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，13 类按 <b>Eurostat 2024 COICOP 结构</b> 拆分（食品/居住/交通/餐饮/文娱/保险金融/家用设备/医疗/衣物/烟酒/信息通讯/教育/其他）；该结构以 EU 2024 为代理，真实全球食品份额更高、住房更低。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。',
     perCap:"人均年度实际消费",
 
     keyItems:"关键类别",
@@ -160,7 +165,7 @@ const I18N = {
     fixedPrice:"年度数据",
     sources:'<b>数据来源：</b><br>· 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>· 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>· Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>· 频率为<strong>年度</strong>更新（世行口径），非实时行情。',
     docTitle:"GRCB Live — 全球实际消费篮子",
-    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,443 · 全球总 ≈ $60 万亿",
+    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,838 · 全球总 ≈ $63.2 万亿 (2024)",
   },
   en:{
     title:"Global Real Consumer Basket",
@@ -178,7 +183,7 @@ const I18N = {
     fixedPrice:"Annual data",
     sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households & NPISHs final consumption exp., current US$), <b>SP.POP.TOTL</b> (world population). 2023 latest available est.<br>· Category shares: World Bank ICP (International Comparison Program) global expenditure-structure approx (housing/food/transport/clothing/electronics/services).<br>· Numbeo view: numbeo.com global city cost-of-living median (pop-weighted), contrast only.<br>· <strong>Annual</strong> update cadence (World Bank basis), not live quotes.",
     docTitle:"GRCB Live — Global Real Consumer Basket",
-    formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,443/cap · global ≈ $60T",
+    formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,838/cap · global ≈ $63.2T (2024)",
   }
 };
 
@@ -224,11 +229,7 @@ function render(){
       return `<div class="row"><div class="l">${catName(c)}</div><div class="num">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
     }).join("");
   } else {}
-}function catClass(name){
-  return "cat-"+({"居住":"energy","食物":"bio","出行":"mfg","衣物":"tech","电子":"tech","服务":"tech"})[name];
-}
-
-function setLang(l){
+}function setLang(l){
   LANG=l; localStorage.setItem("grcb.lang.v1", l); applyStatic(); render();
   document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-lang")===LANG));
 }
