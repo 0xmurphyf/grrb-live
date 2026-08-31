@@ -173,7 +173,7 @@ const I18N = {
     pop:"当前全球总人口", popEst:"全球人口估算(UN 基准)", gdp:"当前全球年 GDP",
     catComp:"类别构成（按当前美元价值）", keyMkt:"关键市场价格", fullBasket:"完整实物篮子 · 26 项",
     thRes:"代表资源", thQty:"人均数量", thAnnual:"年耗", thPrice:"单价", thVal:"美元价值", thShare:"占比",
-    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 83 亿估算", chartFew:"快照点不足，强制刷新数次后形成走势", docTitle:"GRRB Live — 全球实际资源篮子", navGRCB:"→ GRCB · 全球实际消费篮子（日常用品/服务侧）" },
+    updated:"更新于", proxy:"近似", justNow:"刚刚更新", fresh:"8 小时缓存", dataYear:"数据年份", popFallback:"人口按 81.8 亿估算", chartFew:"快照点不足，强制刷新数次后形成走势", docTitle:"GRRB Live — 全球实际资源篮子", navGRCB:"→ GRCB · 全球实际消费篮子（日常用品/服务侧）" },
   en:{ title:"Global Real Resource Basket",
     sub:"A basket of <strong>fixed-quantity</strong> <strong>primary tradable commodities</strong>, aggregated at current USD market prices. <strong>Per-capita qty = global annual consumption ÷ global population</strong>. Covers: extracted fuels, biomass (full scope: food+feed+seed+industrial), manufacturing (downstream tradable products only, no ores), catalysts. Double-counting items removed (electricity/gasoline/diesel/total-primary-energy). Sand & gravel is the largest by material flow (small by USD value), disclosed separately. Excludes stocks, bonds, currencies, bitcoin, or meat (to avoid overlap with feed grains).",
     statusWaiting:"Waiting", statusLive:"Live", perCap:"Per-capita resource cost", aggregating:"Aggregating",
@@ -208,7 +208,7 @@ const LS_HIST = "grrb.hist.v3";
 // =====================================================================
 const PROXY_BASE = "https://grrb-proxy.murphyf919.workers.dev";
 let POP_LIVE = null; // 运行时由 Worldometer 填充（实时）
-const POP_FALLBACK = 8300000000; // 兜底：World Bank/UN 2026 约 83 亿
+const POP_FALLBACK = 8180000000; // 兜底：UN 2026 年中约 81.8 亿
 // annual = 全球年消耗量（合约报价单位）；src = 权威来源年份
 // qty 自动 = annual / 全球人口（人均）
 const BASKET = [
@@ -224,6 +224,7 @@ const BASKET = [
   {key:"corn",   cat:"生存与生物质", name:"玉米",  unit:"bu", cents:true, yahoo:"ZC=F", annual:4.7e10,  src:"USDA 总消费 2024/25"},
   {key:"wheat",  cat:"生存与生物质", name:"小麦",  unit:"bu", cents:true, yahoo:"ZW=F", annual:3.1e10,  src:"USDA 总消费 2024/25"},
   {key:"rice",   cat:"生存与生物质", name:"稻米",  unit:"bu", cents:true, yahoo:"ZR=F", annual:2.1e10,  src:"USDA 总消费 2024/25"},
+  {key:"fish",   cat:"生存与生物质", name:"渔获",  unit:"t", fixed:{price:2500, source:"FAO ~$2.5/kg 水产均价"}, annual:1.8e8, src:"FAO 2024 捕捞+养殖全产量(约1.85亿吨)"},
   {key:"soy",    cat:"生存与生物质", name:"大豆",  unit:"bu", cents:true, yahoo:"ZS=F", annual:1.5e10,  src:"USDA 总消费 2024/25"},
   {key:"sugar",  cat:"生存与生物质", name:"原糖",  unit:"lb", cents:true, yahoo:"SB=F", annual:4.0e12, src:"ISO 2024"},
   {key:"cotton", cat:"生存与生物质", name:"棉花",  unit:"lb", cents:true, yahoo:"CT=F", annual:5.5e11, src:"ICAC 2024"},
@@ -253,7 +254,7 @@ const BASKET = [
 // 品种英文名
 const NAME_EN = {
   coal:"Coal", wti:"WTI Crude", brent:"Brent Crude", othoil:"Other crude", ng:"Henry Hub Gas", ho:"Heating Oil", rbob:"RBOB Gasoline", uranium:"Uranium U3O8",
-  corn:"Corn", wheat:"Wheat", rice:"Rice", soy:"Soybeans", sugar:"Raw Sugar", cotton:"Cotton", coffee:"Coffee", cocoa:"Cocoa",
+  corn:"Corn", wheat:"Wheat", rice:"Rice", soy:"Soybeans", fish:"Fish & seafood", sugar:"Raw Sugar", cotton:"Cotton", coffee:"Coffee", cocoa:"Cocoa",
   iron:"62% Iron Ore", hrc:"Hot-rolled Steel", alum:"Aluminum", copper:"Copper", zinc:"Zinc", nickel:"Nickel", cement:"Cement",
   gold:"Industrial Gold", silver:"Industrial Silver", plat:"Platinum", pall:"Palladium",
   roundwood:"Industrial roundwood", sand:"Sand & gravel", phos:"Phosphate rock", potash:"Potash", ree:"Rare earth", lithium:"Lithium", cement_proxy:"Cement"
