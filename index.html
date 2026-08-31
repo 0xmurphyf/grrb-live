@@ -179,7 +179,7 @@ const I18N = {
     thRes:"Resource", thQty:"Per-capita", thAnnual:"Annual", thPrice:"Unit price", thVal:"USD value", thShare:"Share",
     updated:"Updated", proxy:"approx", justNow:"Just updated", fresh:"8h cache", dataYear:"Data year", popFallback:"Pop. est. at 8.3B", chartFew:"Not enough snapshots yet — force a few refreshes to build the trend" }
 };
-let LANG = localStorage.getItem("grrb.lang.v1") || "en";
+let LANG = localStorage.getItem("grrb.lang.v1") || "zh";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
 const CAT_EN = {"动力与能源":"Energy","生存与生物质":"Biomass","结构与制造":"Manufacturing","技术催化":"Catalysts"};
 function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
