@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRCB Live — 全球实际消费篮子</title>
+<style>
+:root{
+  --bg:#071018;--panel:#0d1622;--elev:#141e2c;--ink:#e8eef6;--mute:#8b9bb0;--faint:#5d6e82;
+  --line:rgba(232,238,246,.12);--accent:#7eb0d4;--gain:#5dbe8a;--loss:#e07a84;--metal:#c9b896;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:auto;padding:28px 18px 72px}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:26px}
+.title{font-size:36px;font-weight:650;margin:8px 0 0;letter-spacing:-.03em;text-wrap:balance}
+.sub{color:var(--mute);max-width:760px;line-height:1.7;margin-top:12px}
+.live{border:1px solid var(--line);background:var(--elev);border-radius:999px;padding:8px 13px;color:var(--metal);font-size:12px;white-space:nowrap}
+.dot{display:inline-block;width:7px;height:7px;background:var(--metal);border-radius:50%;margin-right:7px}
+.note-box{border:1px solid var(--line);background:var(--elev);border-radius:16px;padding:16px 18px;margin:0 0 28px;line-height:1.7;color:var(--mute);font-size:14px}
+.note-box b{color:var(--ink);font-weight:600}
+.section{font-size:18px;font-weight:600;margin:8px 0 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(201,184,150,.14);color:var(--metal)}
+.grid{display:grid;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.label{color:var(--mute);font-size:13px}
+.big{font-size:44px;font-weight:650;letter-spacing:-.03em;margin:8px 0;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.meta{color:var(--faint);font-size:12px;margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mini{background:var(--elev);border:1px solid var(--line);border-radius:12px;padding:12px}
+.mini .k{color:var(--faint);font-size:11px;letter-spacing:.04em}
+.mini .p{font-size:20px;font-weight:600;margin-top:8px;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.mini .s{color:var(--faint);font-size:11px;margin-top:6px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+th{color:var(--faint);font-weight:500}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.cat-h td{padding-top:16px;color:var(--accent);font-size:12px;letter-spacing:.08em;font-weight:600;border-bottom:none}
+.cat-energy{color:#e0a04a;background:rgba(224,160,74,.14)}
+.cat-bio{color:#5dbe8a;background:rgba(93,190,138,.14)}
+.cat-mfg{color:#7eb0d4;background:rgba(126,176,212,.14)}
+.cat-tech{color:#c9b896;background:rgba(201,184,150,.14)}
+.bars{display:grid;gap:12px;margin-top:16px}
+.bar-top{display:flex;justify-content:space-between;gap:12px;font-size:12px}
+.bar-top .n{color:var(--mute)}
+.bar-top .v{font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--faint)}
+.track{height:8px;background:var(--elev);border-radius:99px;overflow:hidden;margin-top:6px}
+.fill{height:100%;border-radius:99px}
+#langSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:12px}
+.ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
+.ls-btn.active{background:var(--accent);color:#071018;font-weight:600}
+.fine{color:var(--faint);font-size:12px;line-height:1.7;margin-top:14px}
+.formula{font-family:"IBM Plex Mono",ui-monospace,monospace;background:#07111d;padding:12px 14px;border-radius:8px;color:#a9d9ff;overflow:auto;margin-top:12px;font-size:12px}
+@media(max-width:900px){
+  .cards{grid-template-columns:1fr 1fr}
+  .title{font-size:28px}
+  .big{font-size:32px}
+  .top{display:block}
+  .live{display:inline-block;margin-top:14px}
+  .desk{display:none}
+  .stack{display:block}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .row .l{font-size:13px}
+  .row .sub{font-size:12px;color:var(--mute);margin:0}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1 class="title" data-i18n="title">全球实际消费篮子</h1>
+    <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的<strong>日常用品与服务</strong>组合，按人均年支出加总，反映"一个人过日子"的全球年度成本。权重由<strong>人均年支出 × 实际人口</strong>自然涌现。覆盖居住、食物、出行、衣物、电子、服务六类。不含投资品、耐用品二手、税收与转移支付。价格为固定参考价（来源见每项链接），非实时行情。</p>
+  </div>
+  <div style="display:flex;flex-direction:row;align-items:center;gap:10px">
+    <div class="live"><span class="dot"></span><span id="status">固定参考价</span></div>
+    <div id="langSwitch">
+      <button type="button" data-lang="zh" class="ls-btn active">中</button>
+      <button type="button" data-lang="en" class="ls-btn">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="note-box">
+  <b>篮子怎么读。</b>数量 = 全球年消费支出 ÷ 10000（万分之一），价格固定为 1 USD/单位。<strong>指数 = 人均年支出合计</strong>（即一个人一年的生活成本），全球总 = 人均 × 全球人口（~83 亿）。房租为最大头，符合现实成本结构。所有价格为固定参考价（Numbeo / World Bank / 企业官网标价），<strong>非实时</strong>，季度手动更新——这是消费侧数据现实：日常用品与服务没有流动性实时报价。
+</div>
+
+<div class="section">GRCB / USD <span class="tag" id="freshTag">固定参考价</span></div>
+<div class="grid">
+  <section class="card">
+    <div class="label">人均年度生活成本</div>
+    <div class="big" id="grcb">$—</div>
+    <div id="grcbMeta" class="label" style="color:var(--gain)"></div>
+    <div class="meta" id="grcbUpdated"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">类别构成（按人均年支出，自然涌现）</div>
+    <div class="bars" id="catBars"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">关键支出项</div>
+    <div class="cards" id="tickers"></div>
+  </section>
+
+  <section class="card">
+    <div class="label">完整消费篮子 · <span id="itemCount">0</span> 项</div>
+    <div class="desk">
+      <table>
+        <thead><tr><th>类别</th><th>项目</th><th class="num">人均年支出</th><th class="num">占指数</th></tr></thead>
+        <tbody id="basketBody"></tbody>
+      </table>
+    </div>
+    <div class="stack" id="basketStack"></div>
+    <div class="formula">GRCB = Σ 人均年支出(USD)  ·  全球总 = GRCB × 全球人口(~8.3B)</div>
+  </section>
+</div>
+
+<p class="fine">
+  <b>数据来源：</b><br>
+  · 居住/食物/出行/服务：Numbeo 全球生活成本中位（人口加权近似），numbeo.com。<br>
+  · 居民电价/通讯：World Bank、OECD 公开数据。<br>
+  · 订阅/电子零售价：企业官网标价（Netflix / Spotify / Apple 等）取主流档。<br>
+  · 价格为<strong>固定参考价</strong>，非实时行情；建议季度手动复核更新。最后更新 2026-Q3。
+</p>
+</div>
+
+<script>
+const POP = 8.3e9; // 全球人口近似
+const UPDATED = "2026-Q3";
+
+const I18N = {
+  zh:{
+    title:"全球实际消费篮子",
+    sub:'一个<strong>固定数量</strong>的<strong>日常用品与服务</strong>组合，按人均年支出加总，反映"一个人过日子"的全球年度成本。权重由<strong>人均年支出 × 实际人口</strong>自然涌现。覆盖居住、食物、出行、衣物、电子、服务六类。不含投资品、耐用品二手、税收与转移支付。价格为固定参考价（来源见每项链接），非实时行情。',
+    perCap:"人均年度生活成本",
+    catConst:"类别构成（按人均年支出，自然涌现）",
+    keyItems:"关键支出项",
+    full:"完整消费篮子",
+    colCat:"类别", colItem:"项目", colPerCap:"人均年支出", colShare:"占指数",
+    itemCount:"项",
+    globalTotal:"全球总年消费",
+    updated:"更新于",
+    fixedPrice:"固定参考价",
+    shareOf:"占指数",
+    docTitle:"GRCB Live — 全球实际消费篮子"
+  },
+  en:{
+    title:"Global Real Consumer Basket",
+    sub:"A <strong>fixed-basket</strong> of <strong>everyday goods & services</strong>, summed by annual per-capita spend — the global annual cost of 'getting by'. Weights emerge naturally from <strong>per-capita spend × actual population</strong>. Covers housing, food, transport, clothing, electronics, services. Excludes investment goods, used durables, taxes and transfers. Prices are fixed reference values (sources linked per item), not live quotes.",
+    perCap:"Annual per-capita living cost",
+    catConst:"Category mix (by per-capita spend, emerges naturally)",
+    keyItems:"Key expense items",
+    full:"Full consumer basket",
+    colCat:"Category", colItem:"Item", colPerCap:"Per-capita / yr", colShare:"Index %",
+    itemCount:"items",
+    globalTotal:"Global annual consumption",
+    updated:"Updated",
+    fixedPrice:"Fixed reference",
+    shareOf:"Index %",
+    docTitle:"GRCB Live — Global Real Consumer Basket"
+  }
+};
+
+// 类别
+const CAT_ORDER = ["居住","食物","出行","衣物","电子","服务"];
+const CAT_COLOR = {
+  "居住":"#e0a04a","食物":"#5dbe8a","出行":"#7eb0d4","衣物":"#c9b896","电子":"#b89cc9","服务":"#d4a0c0"
+};
+const CAT_EN = {"居住":"Housing","食物":"Food","出行":"Transport","衣物":"Clothing","电子":"Electronics","服务":"Services"};
+
+// 每个项目：perCap = 人均年支出 USD；src = 来源说明
+const BASKET = [
+  // 居住
+  {key:"rent",   cat:"居住", name:"房租(1室市中心/月)", en:"Rent (1BR city center/mo)", perCap:7200, src:"Numbeo 全球中位(人口加权)~$600/月"},
+  {key:"power",  cat:"居住", name:"家用电", en:"Household electricity", perCap:450, src:"World Bank 居民电价~$0.15/kWh × 250kWh/月"},
+  {key:"water",  cat:"居住", name:"水费", en:"Water bill", perCap:240, src:"Numbeo 全球中位~$20/月"},
+  {key:"broad",  cat:"居住", name:"宽带", en:"Broadband", perCap:360, src:"Numbeo~$30/月"},
+  {key:"mobile", cat:"居住", name:"手机流量", en:"Mobile data", perCap:120, src:"Numbeo~$10/月"},
+
+  // 食物（年支出）
+  {key:"fastfood", cat:"食物", name:"快餐", en:"Fast food", perCap:480, src:"Numbeo~$8 × 60次/年"},
+  {key:"coffee",   cat:"食物", name:"外带咖啡", en:"Takeout coffee", perCap:360, src:"Numbeo~$3 × 120杯/年"},
+  {key:"bread",    cat:"食物", name:"面包", en:"Bread", perCap:156, src:"Numbeo~$1.5/500g × 104/年"},
+  {key:"milk",     cat:"食物", name:"牛奶", en:"Milk", perCap:125, src:"Numbeo~$1.2/L × 104/年"},
+  {key:"waterb",   cat:"食物", name:"瓶装水", en:"Bottled water", perCap:104, src:"Numbeo~$1/1.5L × 104/年"},
+  {key:"noodle",   cat:"食物", name:"方便面", en:"Instant noodles", perCap:26, src:"Numbeo~$0.5 × 52/年"},
+  {key:"rice",     cat:"食物", name:"米", en:"Rice", perCap:48, src:"Numbeo~$0.8/kg × 60kg/年"},
+  {key:"egg",      cat:"食物", name:"鸡蛋", en:"Eggs", perCap:65, src:"Numbeo~$2.5/打 × 26/年"},
+  {key:"beer",     cat:"食物", name:"啤酒", en:"Beer", perCap:104, src:"Numbeo~$2 × 52/年"},
+
+  // 出行
+  {key:"fuel",   cat:"出行", name:"消费汽油", en:"Consumer gasoline", perCap:480, src:"Numbeo~$1.2/L × 400L/年"},
+  {key:"bus",    cat:"出行", name:"公交", en:"Public transit", perCap:150, src:"Numbeo~$1.5 × 100次/年"},
+  {key:"uber",   cat:"出行", name:"网约车", en:"Ride-hail", perCap:200, src:"Numbeo~$1/km × 200km/年"},
+  {key:"flight", cat:"出行", name:"国内机票", en:"Domestic flight", perCap:240, src:"Numbeo~$120 × 2次/年"},
+  {key:"bike",   cat:"出行", name:"自行车", en:"Bicycle", perCap:80, src:"~$400/5年摊"},
+
+  // 衣物
+  {key:"tshirt",  cat:"衣物", name:"T恤", en:"T-shirt", perCap:60, src:"~$15 × 4/年"},
+  {key:"shoes",   cat:"衣物", name:"运动鞋", en:"Sneakers", perCap:60, src:"~$60 × 1/年"},
+  {key:"jeans",   cat:"衣物", name:"牛仔裤", en:"Jeans", perCap:50, src:"~$50 × 1/年"},
+  {key:"coat",    cat:"衣物", name:"外套", en:"Coat", perCap:50, src:"~$100/2年摊"},
+
+  // 电子
+  {key:"phone",  cat:"电子", name:"手机", en:"Smartphone", perCap:267, src:"Apple 基线~$800/3年摊"},
+  {key:"laptop", cat:"电子", name:"笔记本", en:"Laptop", perCap:175, src:"~$700/4年摊"},
+  {key:"earbuds",cat:"电子", name:"耳机", en:"Earbuds", perCap:33, src:"~$100/3年摊"},
+  {key:"tv",     cat:"电子", name:"电视", en:"TV", perCap:71, src:"~$500/7年摊"},
+
+  // 服务
+  {key:"haircut",cat:"服务", name:"理发", en:"Haircut", perCap:120, src:"Numbeo~$15 × 8/年"},
+  {key:"netflix",cat:"服务", name:"Netflix", en:"Netflix", perCap:156, src:"官网标准档~$13/月"},
+  {key:"spotify",cat:"服务", name:"Spotify", en:"Spotify", perCap:132, src:"官网~$11/月"},
+  {key:"gym",    cat:"服务", name:"健身房", en:"Gym", perCap:480, src:"Numbeo~$40/月"},
+  {key:"doctor", cat:"服务", name:"看病", en:"Doctor visit", perCap:100, src:"Numbeo~$50 × 2/年"},
+  {key:"dentist",cat:"服务", name:"牙医", en:"Dentist", perCap:100, src:"~$200/2年摊"},
+  {key:"tuition",cat:"服务", name:"学费", en:"Tuition", perCap:1500, src:"全球中位偏低估算~$1500/年"},
+  {key:"parcel", cat:"服务", name:"快递", en:"Parcel", perCap:60, src:"~$5 × 12/年"},
+];
+
+const TICKERS = [
+  {key:"rent",label:"房租"},{key:"fuel",label:"汽油"},{key:"netflix",label:"Netflix"},
+  {key:"gym",label:"健身"},{key:"tuition",label:"学费"},{key:"phone",label:"手机"},
+  {key:"fastfood",label:"快餐"},{key:"coffee",label:"咖啡"}
+];
+
+let LANG = localStorage.getItem("grcb.lang.v1") || "zh";
+function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
+function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
+function itemName(it){ return LANG==="en" ? (it.en||it.name) : it.name; }
+function money(x,d=0){ if(x==null||!Number.isFinite(x)) return "—"; return "$"+x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+function applyStatic(){
+  document.title = T("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = T(el.getAttribute("data-i18n")); });
+  document.getElementById("status").textContent = T("fixedPrice");
+  document.getElementById("freshTag").textContent = T("fixedPrice");
+}
+
+function compute(){
+  let total=0; const cats={}; CAT_ORDER.forEach(c=>cats[c]=0);
+  const rows = BASKET.map(it=>{ total+=it.perCap; cats[it.cat]+=it.perCap; return {it, v:it.perCap}; });
+  return {total, cats, rows};
+}
+
+function render(){
+  const g = compute();
+  document.getElementById("grcb").textContent = money(g.total);
+  document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+money(g.total*POP);
+  document.getElementById("grcbUpdated").textContent = T("updated")+": "+UPDATED;
+  document.getElementById("itemCount").textContent = BASKET.length;
+
+  // 类别条形
+  const maxCat = Math.max(1, ...Object.values(g.cats));
+  document.getElementById("catBars").innerHTML = CAT_ORDER.map(name=>{
+    const v=g.cats[name]||0, share=g.total?v/g.total*100:0;
+    return `<div><div class="bar-top"><span class="n">${catName(name)}</span><span class="v">${money(v)} · ${share.toFixed(1)}%</span></div>
+      <div class="track"><div class="fill" style="width:${(v/maxCat)*100}%;background:${CAT_COLOR[name]}"></div></div></div>`;
+  }).join("");
+
+  // 关键卡
+  document.getElementById("tickers").innerHTML = TICKERS.map(t=>{
+    const it = BASKET.find(b=>b.key===t.key);
+    return `<div class="mini"><div class="k">${t.label}</div><div class="p">${money(it.perCap)}</div><div class="s">${T("perCap")}</div></div>`;
+  }).join("");
+
+  // 表
+  let lastCat="", body="";
+  for(const row of g.rows){
+    if(row.it.cat!==lastCat){
+      body += `<tr class="cat-h"><td colspan="4" class="cat-${catClass(row.it.cat)}">${catName(row.it.cat)}</td></tr>`;
+      lastCat=row.it.cat;
+    }
+    const share = g.total ? (row.v/g.total*100).toFixed(1)+"%" : "—";
+    body += `<tr><td>${catName(row.it.cat)}</td><td>${itemName(row.it)}<br><span class="meta">${row.it.src}</span></td>
+      <td class="num">${money(row.v)}</td><td class="num">${share}</td></tr>`;
+  }
+  document.getElementById("basketBody").innerHTML = body;
+
+  // 移动栈
+  lastCat=""; let stack="";
+  for(const row of g.rows){
+    if(row.it.cat!==lastCat){
+      stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${catName(row.it.cat)}</div>`;
+      lastCat=row.it.cat;
+    }
+    stack += `<div class="row"><div class="l">${itemName(row.it)}<div class="sub">${row.it.src}</div></div><div class="num">${money(row.v)}</div></div>`;
+  }
+  document.getElementById("basketStack").innerHTML = stack;
+}
+
+function catClass(name){
+  return "cat-"+({"居住":"energy","食物":"bio","出行":"mfg","衣物":"tech","电子":"tech","服务":"tech"})[name];
+}
+
+function setLang(l){
+  LANG=l; localStorage.setItem("grcb.lang.v1", l); applyStatic(); render();
+  document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-lang")===LANG));
+}
+
+document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{
+  b.onclick = ()=>setLang(b.getAttribute("data-lang"));
+});
+applyStatic();
+render();
+setLang(LANG);
+</script>
+</body>
+</html>
