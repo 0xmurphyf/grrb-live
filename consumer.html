@@ -36,10 +36,6 @@ th,td{padding:10px 6px;border-bottom:1px solid var(--line);text-align:left;font-
 th{color:var(--faint);font-weight:500}
 td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex Mono",ui-monospace,monospace}
 .cat-h td{padding-top:16px;color:var(--accent);font-size:12px;letter-spacing:.08em;font-weight:600;border-bottom:none}
-.cat-energy{color:#e0a04a;background:rgba(224,160,74,.14)}
-.cat-bio{color:#5dbe8a;background:rgba(93,190,138,.14)}
-.cat-mfg{color:#7eb0d4;background:rgba(126,176,212,.14)}
-.cat-tech{color:#c9b896;background:rgba(201,184,150,.14)}
 .bars{display:grid;gap:12px;margin-top:16px}
 .bar-top{display:flex;justify-content:space-between;gap:12px;font-size:12px}
 .bar-top .n{color:var(--mute)}
@@ -49,6 +45,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 #langSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:12px}
 .ls-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
 .ls-btn.active{background:var(--accent);color:#071018;font-weight:600}
+#modeSwitch{display:inline-flex;gap:3px;background:var(--elev);border:1px solid var(--line);border-radius:8px;padding:3px;margin-left:10px}
+.ms-btn{background:transparent;border:none;color:var(--mute);font:inherit;font-size:12px;padding:4px 10px;cursor:pointer;border-radius:6px;min-height:auto}
+.ms-btn.active{background:var(--metal);color:#071018;font-weight:600}
 .fine{color:var(--faint);font-size:12px;line-height:1.7;margin-top:14px}
 .formula{font-family:"IBM Plex Mono",ui-monospace,monospace;background:#07111d;padding:12px 14px;border-radius:8px;color:#a9d9ff;overflow:auto;margin-top:12px;font-size:12px}
 @media(max-width:900px){
@@ -63,9 +62,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
   .row .l{font-size:13px}
   .row .sub{font-size:12px;color:var(--mute);margin:0}
 }
-.nav{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px}
-.nav a{color:var(--accent);text-decoration:none}
-.nav a:hover{text-decoration:underline}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -75,10 +71,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 <header class="top">
   <div>
     <h1 class="title" data-i18n="title">全球实际消费篮子</h1>
-    <p class="sub" data-i18n="sub">一个<strong>固定数量</strong>的<strong>日常用品与服务</strong>组合，按人均年支出加总，反映"一个人过日子"的全球年度成本。权重由<strong>人均年支出 × 实际人口</strong>自然涌现。覆盖居住、食物、出行、衣物、电子、服务六类。不含投资品、耐用品二手、税收与转移支付。价格为固定参考价（来源见每项链接），非实时行情。</p>
+    <p class="sub" data-i18n="sub">一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。</p>
   </div>
   <div style="display:flex;flex-direction:row;align-items:center;gap:10px">
-    <div class="live"><span class="dot"></span><span id="status">固定参考价</span></div>
+    <div class="live"><span class="dot"></span><span id="status">年度数据</span></div>
     <div id="langSwitch">
       <button type="button" data-lang="zh" class="ls-btn active">中</button>
       <button type="button" data-lang="en" class="ls-btn">EN</button>
@@ -87,211 +83,253 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:"IBM Plex 
 </header>
 
 <div class="note-box" data-i18n="noteBox">
-  <b>篮子怎么读。</b>数量 = 全球年消费支出 ÷ 10000（万分之一），价格固定为 1 USD/单位。<strong>指数 = 人均年支出合计</strong>（即一个人一年的生活成本），全球总 = 人均 × 全球人口（~83 亿）。房租为最大头，符合现实成本结构。所有价格为固定参考价（Numbeo / World Bank / 企业官网标价），<strong>非实时</strong>，季度手动更新——这是消费侧数据现实：日常用品与服务没有流动性实时报价。
+  <b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，六类按 <b>ICP 全球支出份额</b> 拆分（住房/食品/交通/衣物/电子/服务）。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。
 </div>
 
-<div class="section">GRCB / USD <span class="tag" id="freshTag">固定参考价</span></div>
+<div class="section">
+  <span data-i18n="viewLabel">视角</span>:
+  <div id="modeSwitch">
+    <button type="button" data-mode="wb" class="ms-btn active">世行实际消费</button>
+    <button type="button" data-mode="numbeo" class="ms-btn">Numbeo 城市成本</button>
+  </div>
+  <span class="tag" id="freshTag">年度 · 2023</span>
+</div>
+
 <div class="grid">
   <section class="card">
-    <div class="label" data-i18n="perCap">人均年度生活成本</div>
+    <div class="label" id="bigLabel" data-i18n="perCap">人均年度实际消费</div>
     <div class="big" id="grcb">$—</div>
     <div id="grcbMeta" class="label" style="color:var(--gain)"></div>
     <div class="meta" id="grcbUpdated"></div>
   </section>
 
   <section class="card">
-    <div class="label" data-i18n="catConst">类别构成（按人均年支出，自然涌现）</div>
+    <div class="label" data-i18n="catConst">类别构成（ICP 全球支出份额）</div>
     <div class="bars" id="catBars"></div>
   </section>
 
   <section class="card">
-    <div class="label" data-i18n="keyItems">关键支出项</div>
+    <div class="label" data-i18n="keyItems">关键类别</div>
     <div class="cards" id="tickers"></div>
   </section>
 
   <section class="card">
-    <div class="label"><span data-i18n="full">完整消费篮子</span> · <span id="itemCount">0</span> <span data-i18n="itemCount">项</span></div>
+    <div class="label"><span data-i18n="full">完整消费篮子</span> · <span id="itemCount">0</span> <span data-i18n="itemCount">类</span></div>
     <div class="desk">
       <table>
-        <thead><tr><th data-i18n="colCat">类别</th><th data-i18n="colItem">项目</th><th class="num" data-i18n="colPerCap">人均年支出</th><th class="num" data-i18n="colShare">占指数</th></tr></thead>
+        <thead><tr><th data-i18n="colCat">类别</th><th data-i18n="colShare">占指数</th><th class="num" data-i18n="colPerCap">人均金额</th><th class="num" data-i18n="colGlobal">全球总值</th></tr></thead>
         <tbody id="basketBody"></tbody>
       </table>
     </div>
     <div class="stack" id="basketStack"></div>
-    <div class="formula" data-i18n="formula">GRCB = Σ per-capita spend (USD)  ·  Global total = GRCB × global population (~8.3B)</div>
+    <div class="formula" id="formulaBox"></div>
   </section>
 </div>
 
 <p class="fine" data-i18n="sources">
   <b>数据来源：</b><br>
-  · 居住/食物/出行/服务：Numbeo 全球生活成本中位（人口加权近似），numbeo.com。<br>
-  · 居民电价/通讯：World Bank、OECD 公开数据。<br>
-  · 订阅/电子零售价：企业官网标价（Netflix / Spotify / Apple 等）取主流档。<br>
-  · 价格为<strong>固定参考价</strong>，非实时行情；建议季度手动复核更新。最后更新 2026-Q3。
+  · 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>
+  · 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>
+  · Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>
+  · 频率为<strong>年度</strong>更新（世行口径），非实时行情。
 </p>
-<div class="nav"><a href="index.html" data-i18n="navGRRB">← GRRB · 全球实际资源篮子（原料侧）</a></div>
 </div>
 
 <script>
-const POP = 8.3e9;
-const UPDATED = "2026-Q3";
+const POP = 8.06e9;            // 世界人口 2023 (WDI SP.POP.TOTL)
+const YEAR = "2023 (est.)";
+// 世行 NE.CON.PRVT.CD 世界合计（current US$）：2022=56.83万亿；2023 估算 ~60万亿
+const WB_GLOBAL = 60.0e12;     // 全球家庭最终消费 (current US$, 2023 est.)
+const WB_PERCAP = WB_GLOBAL / POP; // ≈ $7,443
 
-const I18N = {
-  zh:{
-    title:"全球实际消费篮子",
-    sub:'一个<strong>固定数量</strong>的<strong>日常用品与服务</strong>组合，按人均年支出加总，反映"一个人过日子"的全球年度成本。权重由<strong>人均年支出 × 实际人口</strong>自然涌现。覆盖居住、食物、出行、衣物、电子、服务六类。不含投资品、耐用品二手、税收与转移支付。价格为固定参考价（来源见每项链接），非实时行情。',
-    noteBox:'<b>篮子怎么读。</b>数量 = 全球年消费支出 ÷ 10000（万分之一），价格固定为 1 USD/单位。<strong>指数 = 人均年支出合计</strong>（即一个人一年的生活成本），全球总 = 人均 × 全球人口（~83 亿）。房租为最大头，符合现实成本结构。所有价格为固定参考价（Numbeo / World Bank / 企业官网标价），<strong>非实时</strong>，季度手动更新——这是消费侧数据现实：日常用品与服务没有流动性实时报价。',
-    perCap:"人均年度生活成本",
-    catConst:"类别构成（按人均年支出，自然涌现）",
-    keyItems:"关键支出项",
-    full:"完整消费篮子",
-    itemCount:"项",
-    colCat:"类别", colItem:"项目", colPerCap:"人均年支出", colShare:"占指数",
-    globalTotal:"全球总年消费",
-    updated:"更新于",
-    fixedPrice:"固定参考价",
-    sources:'<b>数据来源：</b><br>· 居住/食物/出行/服务：Numbeo 全球生活成本中位（人口加权近似），numbeo.com。<br>· 居民电价/通讯：World Bank、OECD 公开数据。<br>· 订阅/电子零售价：企业官网标价（Netflix / Spotify / Apple 等）取主流档。<br>· 价格为<strong>固定参考价</strong>，非实时行情；建议季度手动复核更新。最后更新 2026-Q3。',
-    docTitle:"GRCB Live — 全球实际消费篮子",
-    formula:"GRCB = Σ 人均年支出(USD)  ·  全球总 = GRCB × 全球人口(~8.3B)",
-    navGRRB:"← GRRB · 全球实际资源篮子（原料侧）"
-  },
-  en:{
-    title:"Global Real Consumer Basket",
-    sub:"A <strong>fixed-basket</strong> of <strong>everyday goods & services</strong>, summed by annual per-capita spend — the global annual cost of 'getting by'. Weights emerge naturally from <strong>per-capita spend × actual population</strong>. Covers housing, food, transport, clothing, electronics, services. Excludes investment goods, used durables, taxes and transfers. Prices are fixed reference values (sources linked per item), not live quotes.",
-    noteBox:"<b>How to read it.</b> Quantity = global annual spend ÷ 10000 (one ten-thousandth), price fixed at 1 USD/unit. <strong>Index = total annual per-capita spend</strong> (i.e. one person's yearly cost of living); global total = per-capita × global population (~8.3B). Rent is the largest component, matching real cost structure. All prices are fixed reference values (Numbeo / World Bank / official list prices), <strong>not live</strong>, updated manually each quarter — a reality of consumer-side data: everyday goods & services have no liquid real-time quotes.",
-    perCap:"Annual per-capita living cost",
-    catConst:"Category mix (by per-capita spend, emerges naturally)",
-    keyItems:"Key expense items",
-    full:"Full consumer basket",
-    itemCount:"items",
-    colCat:"Category", colItem:"Item", colPerCap:"Per-capita / yr", colShare:"Index %",
-    globalTotal:"Global annual consumption",
-    updated:"Updated",
-    fixedPrice:"Fixed reference",
-    sources:"<b>Sources:</b><br>· Housing/food/transport/services: Numbeo global cost-of-living median (population-weighted approx.), numbeo.com.<br>· Residential power / comms: World Bank, OECD public data.<br>· Subscription / electronics retail: official list prices (Netflix / Spotify / Apple etc.), mainstream tier.<br>· Prices are <strong>fixed reference</strong>, not live quotes; manual quarterly review recommended. Last updated 2026-Q3.",
-    docTitle:"GRCB Live — Global Real Consumer Basket",
-    formula:"GRCB = Σ per-capita spend (USD)  ·  Global total = GRCB × global population (~8.3B)",
-    navGRRB:"← GRRB · Global Real Resource Basket (input side)"
-  }
-};
-
+// 六类 ICP 全球支出份额（近似）
 const CAT_ORDER = ["居住","食物","出行","衣物","电子","服务"];
+const CAT_SHARE = {
+  "居住":0.20, "食物":0.22, "出行":0.09, "衣物":0.04, "电子":0.08, "服务":0.37
+};
 const CAT_COLOR = {
   "居住":"#e0a04a","食物":"#5dbe8a","出行":"#7eb0d4","衣物":"#c9b896","电子":"#b89cc9","服务":"#d4a0c0"
 };
 const CAT_EN = {"居住":"Housing","食物":"Food","出行":"Transport","衣物":"Clothing","电子":"Electronics","服务":"Services"};
 
-// perCap = 人均年支出 USD；src/ensrc = 来源说明（中英）
-const BASKET = [
-  {key:"rent",   cat:"居住", name:"房租(1室市中心/月)", en:"Rent (1BR city center/mo)", perCap:7200, src:"Numbeo 全球中位(人口加权)~$600/月", ensrc:"Numbeo global median (pop-weighted) ~$600/mo"},
-  {key:"power",  cat:"居住", name:"家用电", en:"Household electricity", perCap:450, src:"World Bank 居民电价~$0.15/kWh × 250kWh/月", ensrc:"World Bank residential ~$0.15/kWh × 250kWh/mo"},
-  {key:"water",  cat:"居住", name:"水费", en:"Water bill", perCap:240, src:"Numbeo 全球中位~$20/月", ensrc:"Numbeo global median ~$20/mo"},
-  {key:"broad",  cat:"居住", name:"宽带", en:"Broadband", perCap:360, src:"Numbeo~$30/月", ensrc:"Numbeo ~$30/mo"},
-  {key:"mobile", cat:"居住", name:"手机流量", en:"Mobile data", perCap:120, src:"Numbeo~$10/月", ensrc:"Numbeo ~$10/mo"},
-
-  {key:"fastfood", cat:"食物", name:"快餐", en:"Fast food", perCap:480, src:"Numbeo~$8 × 60次/年", ensrc:"Numbeo ~$8 × 60/yr"},
-  {key:"coffee",   cat:"食物", name:"外带咖啡", en:"Takeout coffee", perCap:360, src:"Numbeo~$3 × 120杯/年", ensrc:"Numbeo ~$3 × 120 cups/yr"},
-  {key:"bread",    cat:"食物", name:"面包", en:"Bread", perCap:156, src:"Numbeo~$1.5/500g × 104/年", ensrc:"Numbeo ~$1.5/500g × 104/yr"},
-  {key:"milk",     cat:"食物", name:"牛奶", en:"Milk", perCap:125, src:"Numbeo~$1.2/L × 104/年", ensrc:"Numbeo ~$1.2/L × 104/yr"},
-  {key:"waterb",   cat:"食物", name:"瓶装水", en:"Bottled water", perCap:104, src:"Numbeo~$1/1.5L × 104/年", ensrc:"Numbeo ~$1/1.5L × 104/yr"},
-  {key:"noodle",   cat:"食物", name:"方便面", en:"Instant noodles", perCap:26, src:"Numbeo~$0.5 × 52/年", ensrc:"Numbeo ~$0.5 × 52/yr"},
-  {key:"rice",     cat:"食物", name:"米", en:"Rice", perCap:48, src:"Numbeo~$0.8/kg × 60kg/年", ensrc:"Numbeo ~$0.8/kg × 60kg/yr"},
-  {key:"egg",      cat:"食物", name:"鸡蛋", en:"Eggs", perCap:65, src:"Numbeo~$2.5/打 × 26/年", ensrc:"Numbeo ~$2.5/dozen × 26/yr"},
-  {key:"beer",     cat:"食物", name:"啤酒", en:"Beer", perCap:104, src:"Numbeo~$2 × 52/年", ensrc:"Numbeo ~$2 × 52/yr"},
-
-  {key:"fuel",   cat:"出行", name:"消费汽油", en:"Consumer gasoline", perCap:480, src:"Numbeo~$1.2/L × 400L/年", ensrc:"Numbeo ~$1.2/L × 400L/yr"},
-  {key:"bus",    cat:"出行", name:"公交", en:"Public transit", perCap:150, src:"Numbeo~$1.5 × 100次/年", ensrc:"Numbeo ~$1.5 × 100 rides/yr"},
-  {key:"uber",   cat:"出行", name:"网约车", en:"Ride-hail", perCap:200, src:"Numbeo~$1/km × 200km/年", ensrc:"Numbeo ~$1/km × 200km/yr"},
-  {key:"flight", cat:"出行", name:"国内机票", en:"Domestic flight", perCap:240, src:"Numbeo~$120 × 2次/年", ensrc:"Numbeo ~$120 × 2/yr"},
-  {key:"bike",   cat:"出行", name:"自行车", en:"Bicycle", perCap:80, src:"~$400/5年摊", ensrc:"~$400 / 5yr amortized"},
-
-  {key:"tshirt",  cat:"衣物", name:"T恤", en:"T-shirt", perCap:60, src:"~$15 × 4/年", ensrc:"~$15 × 4/yr"},
-  {key:"shoes",   cat:"衣物", name:"运动鞋", en:"Sneakers", perCap:60, src:"~$60 × 1/年", ensrc:"~$60 × 1/yr"},
-  {key:"jeans",   cat:"衣物", name:"牛仔裤", en:"Jeans", perCap:50, src:"~$50 × 1/年", ensrc:"~$50 × 1/yr"},
-  {key:"coat",    cat:"衣物", name:"外套", en:"Coat", perCap:50, src:"~$100/2年摊", ensrc:"~$100 / 2yr amortized"},
-
-  {key:"phone",  cat:"电子", name:"手机", en:"Smartphone", perCap:267, src:"Apple 基线~$800/3年摊", ensrc:"Apple baseline ~$800 / 3yr amortized"},
-  {key:"laptop", cat:"电子", name:"笔记本", en:"Laptop", perCap:175, src:"~$700/4年摊", ensrc:"~$700 / 4yr amortized"},
-  {key:"earbuds",cat:"电子", name:"耳机", en:"Earbuds", perCap:33, src:"~$100/3年摊", ensrc:"~$100 / 3yr amortized"},
-  {key:"tv",     cat:"电子", name:"电视", en:"TV", perCap:71, src:"~$500/7年摊", ensrc:"~$500 / 7yr amortized"},
-
-  {key:"haircut",cat:"服务", name:"理发", en:"Haircut", perCap:120, src:"Numbeo~$15 × 8/年", ensrc:"Numbeo ~$15 × 8/yr"},
-  {key:"netflix",cat:"服务", name:"Netflix", en:"Netflix", perCap:156, src:"官网标准档~$13/月", ensrc:"Official standard tier ~$13/mo"},
-  {key:"spotify",cat:"服务", name:"Spotify", en:"Spotify", perCap:132, src:"官网~$11/月", ensrc:"Official ~$11/mo"},
-  {key:"gym",    cat:"服务", name:"健身房", en:"Gym", perCap:480, src:"Numbeo~$40/月", ensrc:"Numbeo ~$40/mo"},
-  {key:"doctor", cat:"服务", name:"看病", en:"Doctor visit", perCap:100, src:"Numbeo~$50 × 2/年", ensrc:"Numbeo ~$50 × 2/yr"},
-  {key:"dentist",cat:"服务", name:"牙医", en:"Dentist", perCap:100, src:"~$200/2年摊", ensrc:"~$200 / 2yr amortized"},
-  {key:"tuition",cat:"服务", name:"学费", en:"Tuition", perCap:1500, src:"全球中位偏低估算~$1500/年", ensrc:"Low-side global median est. ~$1500/yr"},
-  {key:"parcel", cat:"服务", name:"快递", en:"Parcel", perCap:60, src:"~$5 × 12/年", ensrc:"~$5 × 12/yr"},
+// Numbeo 视角：原城市成本拼篮子（对照用）
+const NUMBEO = [
+  {cat:"居住", name:"房租(1室市中心/月)", en:"Rent (1BR city center/mo)", perCap:7200, src:"Numbeo 全球中位(人口加权)~$600/月", ensrc:"Numbeo global median (pop-weighted) ~$600/mo"},
+  {cat:"居住", name:"家用电", en:"Household electricity", perCap:450, src:"World Bank 居民电价~$0.15/kWh × 250kWh/月", ensrc:"World Bank residential ~$0.15/kWh × 250kWh/mo"},
+  {cat:"居住", name:"水费", en:"Water bill", perCap:240, src:"Numbeo 全球中位~$20/月", ensrc:"Numbeo global median ~$20/mo"},
+  {cat:"居住", name:"宽带", en:"Broadband", perCap:360, src:"Numbeo~$30/月", ensrc:"Numbeo ~$30/mo"},
+  {cat:"居住", name:"手机流量", en:"Mobile data", perCap:120, src:"Numbeo~$10/月", ensrc:"Numbeo ~$10/mo"},
+  {cat:"食物", name:"快餐", en:"Fast food", perCap:480, src:"Numbeo~$8 × 60次/年", ensrc:"Numbeo ~$8 × 60/yr"},
+  {cat:"食物", name:"外带咖啡", en:"Takeout coffee", perCap:360, src:"Numbeo~$3 × 120杯/年", ensrc:"Numbeo ~$3 × 120 cups/yr"},
+  {cat:"食物", name:"面包", en:"Bread", perCap:156, src:"Numbeo~$1.5/500g × 104/年", ensrc:"Numbeo ~$1.5/500g × 104/yr"},
+  {cat:"食物", name:"牛奶", en:"Milk", perCap:125, src:"Numbeo~$1.2/L × 104/年", ensrc:"Numbeo ~$1.2/L × 104/yr"},
+  {cat:"食物", name:"瓶装水", en:"Bottled water", perCap:104, src:"Numbeo~$1/1.5L × 104/年", ensrc:"Numbeo ~$1/1.5L × 104/yr"},
+  {cat:"食物", name:"方便面", en:"Instant noodles", perCap:26, src:"Numbeo~$0.5 × 52/年", ensrc:"Numbeo ~$0.5 × 52/yr"},
+  {cat:"食物", name:"米", en:"Rice", perCap:48, src:"Numbeo~$0.8/kg × 60kg/年", ensrc:"Numbeo ~$0.8/kg × 60kg/yr"},
+  {cat:"食物", name:"鸡蛋", en:"Eggs", perCap:65, src:"Numbeo~$2.5/打 × 26/年", ensrc:"Numbeo ~$2.5/dozen × 26/yr"},
+  {cat:"食物", name:"啤酒", en:"Beer", perCap:104, src:"Numbeo~$2 × 52/年", ensrc:"Numbeo ~$2 × 52/yr"},
+  {cat:"出行", name:"消费汽油", en:"Consumer gasoline", perCap:480, src:"Numbeo~$1.2/L × 400L/年", ensrc:"Numbeo ~$1.2/L × 400L/yr"},
+  {cat:"出行", name:"公交", en:"Public transit", perCap:150, src:"Numbeo~$1.5 × 100次/年", ensrc:"Numbeo ~$1.5 × 100 rides/yr"},
+  {cat:"出行", name:"网约车", en:"Ride-hail", perCap:200, src:"Numbeo~$1/km × 200km/年", ensrc:"Numbeo ~$1/km × 200km/yr"},
+  {cat:"出行", name:"国内机票", en:"Domestic flight", perCap:240, src:"Numbeo~$120 × 2次/年", ensrc:"Numbeo ~$120 × 2/yr"},
+  {cat:"出行", name:"自行车", en:"Bicycle", perCap:80, src:"~$400/5年摊", ensrc:"~$400 / 5yr amortized"},
+  {cat:"衣物", name:"T恤", en:"T-shirt", perCap:60, src:"~$15 × 4/年", ensrc:"~$15 × 4/yr"},
+  {cat:"衣物", name:"运动鞋", en:"Sneakers", perCap:60, src:"~$60 × 1/年", ensrc:"~$60 × 1/yr"},
+  {cat:"衣物", name:"牛仔裤", en:"Jeans", perCap:50, src:"~$50 × 1/年", ensrc:"~$50 × 1/yr"},
+  {cat:"衣物", name:"外套", en:"Coat", perCap:50, src:"~$100/2年摊", ensrc:"~$100 / 2yr amortized"},
+  {cat:"电子", name:"手机", en:"Smartphone", perCap:267, src:"Apple 基线~$800/3年摊", ensrc:"Apple baseline ~$800 / 3yr amortized"},
+  {cat:"电子", name:"笔记本", en:"Laptop", perCap:175, src:"~$700/4年摊", ensrc:"~$700 / 4yr amortized"},
+  {cat:"电子", name:"耳机", en:"Earbuds", perCap:33, src:"~$100/3年摊", ensrc:"~$100 / 3yr amortized"},
+  {cat:"电子", name:"电视", en:"TV", perCap:71, src:"~$500/7年摊", ensrc:"~$500 / 7yr amortized"},
+  {cat:"服务", name:"理发", en:"Haircut", perCap:120, src:"Numbeo~$15 × 8/年", ensrc:"Numbeo ~$15 × 8/yr"},
+  {cat:"服务", name:"Netflix", en:"Netflix", perCap:156, src:"官网标准档~$13/月", ensrc:"Official standard tier ~$13/mo"},
+  {cat:"服务", name:"Spotify", en:"Spotify", perCap:132, src:"官网~$11/月", ensrc:"Official ~$11/mo"},
+  {cat:"服务", name:"健身房", en:"Gym", perCap:480, src:"Numbeo~$40/月", ensrc:"Numbeo ~$40/mo"},
+  {cat:"服务", name:"看病", en:"Doctor visit", perCap:100, src:"Numbeo~$50 × 2/年", ensrc:"Numbeo ~$50 × 2/yr"},
+  {cat:"服务", name:"牙医", en:"Dentist", perCap:100, src:"~$200/2年摊", ensrc:"~$200 / 2yr amortized"},
+  {cat:"服务", name:"学费", en:"Tuition", perCap:1500, src:"全球中位偏低估算~$1500/年", ensrc:"Low-side global median est. ~$1500/yr"},
+  {cat:"服务", name:"快递", en:"Parcel", perCap:60, src:"~$5 × 12/年", ensrc:"~$5 × 12/yr"},
 ];
 
-const TICKERS = [
-  {key:"rent",label:"房租",en:"Rent"},{key:"fuel",label:"汽油",en:"Fuel"},{key:"netflix",label:"Netflix",en:"Netflix"},
-  {key:"gym",label:"健身",en:"Gym"},{key:"tuition",label:"学费",en:"Tuition"},{key:"phone",label:"手机",en:"Phone"},
-  {key:"fastfood",label:"快餐",en:"Fast food"},{key:"coffee",label:"咖啡",en:"Coffee"}
-];
+// 世行模式：六类由 ICP 份额生成
+function wbRows(){
+  return CAT_ORDER.map(c=>({cat:c, share:CAT_SHARE[c], perCap:WB_PERCAP*CAT_SHARE[c], global:WB_GLOBAL*CAT_SHARE[c]}));
+}
+function numbeoRows(){
+  const cats={}; CAT_ORDER.forEach(c=>cats[c]=0);
+  const rows = NUMBEO.map(it=>{ cats[it.cat]+=it.perCap; return {it, v:it.perCap}; });
+  const total = Object.values(cats).reduce((a,b)=>a+b,0);
+  return {rows, cats, total};
+}
+
+const I18N = {
+  zh:{
+    title:"全球实际消费篮子",
+    sub:'一个<strong>全球实际花出去的钱</strong>的篮子，主数据来自<strong>世界银行国民账户</strong>：住户及 NPISH 最终消费支出（NE.CON.PRVT.CD）。指数 = 全球实际消费流量 × 价格，口径与原料侧 GRRB 对齐（都是"真实流量 × 价格"）。六类拆分权重采用<strong>ICP 全球支出份额</strong>，而非城市生活成本中位价。可切换「城市生活成本视角（Numbeo）」作对照——两者含义不同，不要混为同一指数。',
+    noteBox:'<b>篮子怎么读。</b>主轴（默认）= 世界银行 <b>NE.CON.PRVT.CD</b>：住户及 NPISH 最终消费支出（current US$，含估算房租、耐用品、NPISH；不含买房本金、税、转移支付）。<b>人均 = 全球总额 ÷ 世界人口</b>，六类按 <b>ICP 全球支出份额</b> 拆分（住房/食品/交通/衣物/电子/服务）。这是"真实花出去的钱"，不是城市中产生活成本。切换「Numbeo 视角」可看城市中位生活成本拼篮（人均约 $14k，住房被抬到 ~58%，属另一口径）。',
+    perCap:"人均年度实际消费",
+    catConst:"类别构成（ICP 全球支出份额）",
+    keyItems:"关键类别",
+    full:"完整消费篮子",
+    itemCount:"类",
+    colCat:"类别", colShare:"占指数", colPerCap:"人均金额", colGlobal:"全球总值",
+    viewLabel:"视角",
+    globalTotal:"全球总消费",
+    updated:"数据年",
+    fixedPrice:"年度数据",
+    sources:'<b>数据来源：</b><br>· 主轴：World Bank WDI <b>NE.CON.PRVT.CD</b>（住户及 NPISH 最终消费支出，current US$）、<b>SP.POP.TOTL</b>（世界人口）。2023 为最新可得估算年。<br>· 六类份额：World Bank ICP（国际比较项目）全球支出法构成近似（住房/食品/交通/衣物/电子/服务）。<br>· Numbeo 视角：numbeo.com 全球城市生活成本中位（人口加权近似），仅作对照。<br>· 频率为<strong>年度</strong>更新（世行口径），非实时行情。',
+    docTitle:"GRCB Live — 全球实际消费篮子",
+    formulaWB:"GRCB(世行) = NE.CON.PRVT.CD ÷ 世界人口 ≈ 人均 $7,443 · 全球总 ≈ $60 万亿 (2023 est.)",
+    formulaNumbeo:"GRCB(Numbeo) = Σ 城市中位年支出 · 住房被抬至 ~58%（城市中产口径，非全球实际消费）"
+  },
+  en:{
+    title:"Global Real Consumer Basket",
+    sub:"A basket of <strong>money actually spent globally</strong>, sourced from the <strong>World Bank national accounts</strong>: Households & NPISHs final consumption expenditure (NE.CON.PRVT.CD). Index = real consumption flow × price, same framing as the GRRB input side (both 'real flow × price'). Six categories split by <strong>ICP global expenditure shares</strong>, not city cost-of-living medians. Toggle 'City cost-of-living view (Numbeo)' for contrast — the two mean different things, don't mix them into one index.",
+    noteBox:"<b>How to read it.</b> Main axis (default) = World Bank <b>NE.CON.PRVT.CD</b>: households & NPISHs final consumption expenditure (current US$, includes imputed rent, durables, NPISH; excludes home purchase principal, taxes, transfers). <b>Per-capita = global total ÷ world population</b>; six categories split by <b>ICP global expenditure shares</b> (housing/food/transport/clothing/electronics/services). This is 'money actually spent', not urban middle-class cost of living. Toggle 'Numbeo view' to see the city-median basket (≈$14k/capita, housing inflated to ~58%, a different framing).",
+    perCap:"Annual actual consumption / cap",
+    catConst:"Category mix (ICP global expenditure shares)",
+    keyItems:"Key categories",
+    full:"Full consumer basket",
+    itemCount:"cats",
+    colCat:"Category", colShare:"Index %", colPerCap:"Per-capita $", colGlobal:"Global $",
+    viewLabel:"View",
+    globalTotal:"Global consumption",
+    updated:"Data year",
+    fixedPrice:"Annual data",
+    sources:"<b>Sources:</b><br>· Main: World Bank WDI <b>NE.CON.PRVT.CD</b> (households & NPISHs final consumption exp., current US$), <b>SP.POP.TOTL</b> (world population). 2023 latest available est.<br>· Category shares: World Bank ICP (International Comparison Program) global expenditure-structure approx (housing/food/transport/clothing/electronics/services).<br>· Numbeo view: numbeo.com global city cost-of-living median (pop-weighted), contrast only.<br>· <strong>Annual</strong> update cadence (World Bank basis), not live quotes.",
+    docTitle:"GRCB Live — Global Real Consumer Basket",
+    formulaWB:"GRCB(WB) = NE.CON.PRVT.CD ÷ world population ≈ $7,443/cap · global ≈ $60T (2023 est.)",
+    formulaNumbeo:"GRCB(Numbeo) = Σ city-median annual spend · housing inflated to ~58% (urban middle-class framing, not global actual consumption)"
+  }
+};
 
 let LANG = localStorage.getItem("grcb.lang.v1") || "zh";
+let MODE = localStorage.getItem("grcb.mode.v1") || "wb";
 function T(k){ return (I18N[LANG] && I18N[LANG][k]) || (I18N.zh[k]||k); }
 function catName(c){ return LANG==="en" ? (CAT_EN[c]||c) : c; }
-function itemName(it){ return LANG==="en" ? (it.en||it.name) : it.name; }
-function itemSrc(it){ return LANG==="en" ? (it.ensrc||it.src) : it.src; }
 function money(x,d=0){ if(x==null||!Number.isFinite(x)) return "—"; return "$"+x.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function moneyT(x){ return "$"+ (x/1e12).toLocaleString("en-US",{minimumFractionDigits:1,maximumFractionDigits:1}) + " 万亿"; }
+function moneyT_en(x){ return "$"+ (x/1e12).toLocaleString("en-US",{minimumFractionDigits:1,maximumFractionDigits:1}) + "T"; }
 
 function applyStatic(){
   document.title = T("docTitle");
   document.querySelectorAll("[data-i18n]").forEach(el=>{ el.innerHTML = T(el.getAttribute("data-i18n")); });
   document.getElementById("status").textContent = T("fixedPrice");
-  document.getElementById("freshTag").textContent = T("fixedPrice");
-}
-
-function compute(){
-  let total=0; const cats={}; CAT_ORDER.forEach(c=>cats[c]=0);
-  const rows = BASKET.map(it=>{ total+=it.perCap; cats[it.cat]+=it.perCap; return {it, v:it.perCap}; });
-  return {total, cats, rows};
+  document.getElementById("freshTag").textContent = "年度 · " + YEAR;
 }
 
 function render(){
-  const g = compute();
-  document.getElementById("grcb").textContent = money(g.total);
-  document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+money(g.total*POP);
-  document.getElementById("grcbUpdated").textContent = T("updated")+": "+UPDATED;
-  document.getElementById("itemCount").textContent = BASKET.length;
+  const wb = (MODE==="wb");
+  document.getElementById("itemCount").textContent = CAT_ORDER.length;
+  document.getElementById("bigLabel").textContent = T("perCap");
 
-  const maxCat = Math.max(1, ...Object.values(g.cats));
-  document.getElementById("catBars").innerHTML = CAT_ORDER.map(name=>{
-    const v=g.cats[name]||0, share=g.total?v/g.total*100:0;
-    return `<div><div class="bar-top"><span class="n">${catName(name)}</span><span class="v">${money(v)} · ${share.toFixed(1)}%</span></div>
-      <div class="track"><div class="fill" style="width:${(v/maxCat)*100}%;background:${CAT_COLOR[name]}"></div></div></div>`;
-  }).join("");
+  if(wb){
+    const rows = wbRows();
+    document.getElementById("grcb").textContent = money(WB_PERCAP);
+    document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(WB_GLOBAL):moneyT(WB_GLOBAL));
+    document.getElementById("grcbUpdated").textContent = T("updated")+": "+YEAR;
+    document.getElementById("formulaBox").textContent = T("formulaWB");
 
-  document.getElementById("tickers").innerHTML = TICKERS.map(t=>{
-    const it = BASKET.find(b=>b.key===t.key);
-    const lbl = LANG==="en" ? t.en : t.label;
-    return `<div class="mini"><div class="k">${lbl}</div><div class="p">${money(it.perCap)}</div><div class="s">${T("perCap")}</div></div>`;
-  }).join("");
+    const maxCat = Math.max(...rows.map(r=>r.perCap));
+    document.getElementById("catBars").innerHTML = CAT_ORDER.map(c=>{
+      const r = rows.find(x=>x.cat===c);
+      return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</span></div>
+        <div class="track"><div class="fill" style="width:${(r.perCap/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
+    }).join("");
 
-  let lastCat="", body="";
-  for(const row of g.rows){
-    if(row.it.cat!==lastCat){
-      body += `<tr class="cat-h"><td colspan="4" class="cat-${catClass(row.it.cat)}">${catName(row.it.cat)}</td></tr>`;
-      lastCat=row.it.cat;
+    document.getElementById("tickers").innerHTML = CAT_ORDER.slice(0,4).map(c=>{
+      const r = rows.find(x=>x.cat===c);
+      return `<div class="mini"><div class="k">${catName(c)}</div><div class="p">${money(r.perCap)}</div><div class="s">${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
+    }).join("");
+
+    let body="";
+    for(const c of CAT_ORDER){
+      const r = rows.find(x=>x.cat===c);
+      body += `<tr><td>${catName(c)}</td><td class="num">${(CAT_SHARE[c]*100).toFixed(0)}%</td><td class="num">${money(r.perCap)}</td><td class="num">${LANG==="en"?moneyT_en(r.global):moneyT(r.global)}</td></tr>`;
     }
-    const share = g.total ? (row.v/g.total*100).toFixed(1)+"%" : "—";
-    body += `<tr><td>${catName(row.it.cat)}</td><td>${itemName(row.it)}<br><span class="meta">${itemSrc(row.it)}</span></td>
-      <td class="num">${money(row.v)}</td><td class="num">${share}</td></tr>`;
-  }
-  document.getElementById("basketBody").innerHTML = body;
+    document.getElementById("basketBody").innerHTML = body;
+    document.getElementById("basketStack").innerHTML = CAT_ORDER.map(c=>{
+      const r = rows.find(x=>x.cat===c);
+      return `<div class="row"><div class="l">${catName(c)}</div><div class="num">${money(r.perCap)} · ${(CAT_SHARE[c]*100).toFixed(0)}%</div></div>`;
+    }).join("");
+  } else {
+    const {rows, cats, total} = numbeoRows();
+    document.getElementById("grcb").textContent = money(total);
+    document.getElementById("grcbMeta").textContent = T("globalTotal")+": "+(LANG==="en"?moneyT_en(total*POP):moneyT(total*POP));
+    document.getElementById("grcbUpdated").textContent = T("updated")+": Numbeo 2024";
+    document.getElementById("formulaBox").textContent = T("formulaNumbeo");
 
-  lastCat=""; let stack="";
-  for(const row of g.rows){
-    if(row.it.cat!==lastCat){
-      stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${catName(row.it.cat)}</div>`;
-      lastCat=row.it.cat;
+    const maxCat = Math.max(...Object.values(cats));
+    document.getElementById("catBars").innerHTML = CAT_ORDER.map(c=>{
+      const v=cats[c], share=total?v/total*100:0;
+      return `<div><div class="bar-top"><span class="n">${catName(c)}</span><span class="v">${money(v)} · ${share.toFixed(1)}%</span></div>
+        <div class="track"><div class="fill" style="width:${(v/maxCat)*100}%;background:${CAT_COLOR[c]}"></div></div></div>`;
+    }).join("");
+
+    document.getElementById("tickers").innerHTML = NUMBEO.filter((_,i)=>i<4).map(it=>{
+      return `<div class="mini"><div class="k">${LANG==="en"?it.en:it.name}</div><div class="p">${money(it.perCap)}</div><div class="s">${T("perCap")}</div></div>`;
+    }).join("");
+
+    let lastCat="", body="";
+    for(const row of rows){
+      if(row.it.cat!==lastCat){
+        body += `<tr class="cat-h"><td colspan="4" class="cat-${catClass(row.it.cat)}">${catName(row.it.cat)}</td></tr>`;
+        lastCat=row.it.cat;
+      }
+      const share = total ? (row.v/total*100).toFixed(1)+"%" : "—";
+      body += `<tr><td>${LANG==="en"?row.it.en:row.it.name}<br><span class="meta">${LANG==="en"?row.it.ensrc:row.it.src}</span></td><td class="num">${share}</td><td class="num">${money(row.v)}</td><td class="num">${LANG==="en"?moneyT_en(row.v*POP):moneyT(row.v*POP)}</td></tr>`;
     }
-    stack += `<div class="row"><div class="l">${itemName(row.it)}<div class="sub">${itemSrc(row.it)}</div></div><div class="num">${money(row.v)}</div></div>`;
+    document.getElementById("basketBody").innerHTML = body;
+    lastCat=""; let stack="";
+    for(const row of rows){
+      if(row.it.cat!==lastCat){
+        stack += `<div class="meta" style="margin-top:14px;letter-spacing:.08em">${catName(row.it.cat)}</div>`;
+        lastCat=row.it.cat;
+      }
+      stack += `<div class="row"><div class="l">${LANG==="en"?row.it.en:row.it.name}<div class="sub">${LANG==="en"?row.it.ensrc:row.it.src}</div></div><div class="num">${money(row.v)}</div></div>`;
+    }
+    document.getElementById("basketStack").innerHTML = stack;
   }
-  document.getElementById("basketStack").innerHTML = stack;
 }
 
 function catClass(name){
@@ -302,13 +340,17 @@ function setLang(l){
   LANG=l; localStorage.setItem("grcb.lang.v1", l); applyStatic(); render();
   document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-lang")===LANG));
 }
+function setMode(m){
+  MODE=m; localStorage.setItem("grcb.mode.v1", m); render();
+  document.querySelectorAll("#modeSwitch .ms-btn").forEach(b=>b.classList.toggle("active", b.getAttribute("data-mode")===MODE));
+}
 
-document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{
-  b.onclick = ()=>setLang(b.getAttribute("data-lang"));
-});
+document.querySelectorAll("#langSwitch .ls-btn").forEach(b=>{ b.onclick = ()=>setLang(b.getAttribute("data-lang")); });
+document.querySelectorAll("#modeSwitch .ms-btn").forEach(b=>{ b.onclick = ()=>setMode(b.getAttribute("data-mode")); });
 applyStatic();
 render();
 setLang(LANG);
+setMode(MODE);
 </script>
 </body>
 </html>
